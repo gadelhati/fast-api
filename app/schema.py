@@ -7,7 +7,7 @@ T = TypeVar('T')
 class BookSchema(BaseModel):
     id: Optional[int]=None
     title: Optional[str]=None
-    descritption: Optional[str]=None
+    description: Optional[str]=None
 
     class Config:
         orm_mode: True

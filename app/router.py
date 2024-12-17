@@ -43,7 +43,7 @@ async def get_by_id(id: int, db: Session=Depends(get_db)):
 @router.put("/")
 async def update_book(request: RequestBook, db: Session=Depends(get_db)):
     try:
-        _book = crud.update_book(db, book_id=request.parameter.id, title=request.parameter.title, description=request.parameter.descritption)
+        _book = crud.update_book(db, book_id=request.parameter.id, title=request.parameter.title, description=request.parameter.description)
         return Response(code=200, status="Ok", message="Updated", result=_book).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
