@@ -16,7 +16,7 @@ class RequestBook(BaseModel):
     parameter: BookSchema = Field(...)
 
 class Response(GenericModel,Generic[T]):
-    code: str
+    code: int
     status: str
     message: str
-    result: Optional[T]
+    result: Optional[T] = None
