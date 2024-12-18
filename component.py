@@ -7,7 +7,7 @@ class Role(BaseModel):
     name: str
 
 class User(BaseModel):
-    username: str = Field(..., min_length=3, max_length=50)
+    username: str = Field(..., default=None, min_length=3, max_length=50)
     email: str
     password: str
     attempt: int
