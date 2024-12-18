@@ -14,6 +14,6 @@ app = FastAPI()
 
 @app.get("/")
 async def home():
-    return await {"message": "Welcome Home", "status": "success"}
+    return {"message": "Welcome Home", "status": "success"}
 
 app.include_router(router.router, prefix="/book", tags=["book"])
