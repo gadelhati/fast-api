@@ -21,10 +21,10 @@ def remove_book(db: Session, book_id: int) -> None:
     db.delete(_book)
     db.commit()
 
-def update_book(db: Session, book_id: int, title: str, description: str) -> Book:
-    _book = get_book_by_id(db=db, book_id=book_id)
-    _book.title = title
-    _book.description = description
+def update_book(db: Session, book: BookSchema) -> Book:
+    _book = get_book_by_id(db=db, book_id=book.id)
+    _book.title = book.title
+    _book.description = book.description
     db.commit()
     db.refresh(_book)
     return _book
