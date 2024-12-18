@@ -1,6 +1,8 @@
-from typing import List, Optional, Generic, TypeVar
+from typing import List, Union, Optional, Generic, TypeVar
 from pydantic import BaseModel, Field
 from pydantic.generics import GenericModel
+from fastapi import Body
+from datetime import datetime
 
 T = TypeVar('T')
 
@@ -12,10 +14,24 @@ class BookSchema(BaseModel):
     class Config:
         orm_mode: True
 
-class RequestBook(BaseModel):
-    parameter: BookSchema = Field(...)
+class Role(BaseModel):
+    name: str
+    class Config:
+        orm_mode: True
 
-class Response(GenericModel,Generic[T]):
+class User(BaseModel):
+    username: str
+    email: str
+    password: str
+    attempt: int # = Field(..., default=0, min_length=3, max_length=10)
+    active: bool = None
+    secret: Union[str, None] = None
+    role: List[Role] = []
+    start_datetime: datetime = Body()
+    class Config:
+        orm_mode: True
+
+class Response(GenericModel, Generic[T]):
     code: int
     status: str
     message: str

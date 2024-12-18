@@ -18,13 +18,15 @@ def create_book(db: Session, book: BookSchema) -> Book:
 
 def remove_book(db: Session, book_id: int) -> None:
     _book = get_book_by_id(db=db, book_id=book_id)
-    db.delete(_book)
-    db.commit()
+    if _book:
+        db.delete(_book)
+        db.commit()
 
 def update_book(db: Session, book: BookSchema) -> Book:
     _book = get_book_by_id(db=db, book_id=book.id)
-    _book.title = book.title
-    _book.description = book.description
-    db.commit()
-    db.refresh(_book)
+    if _book:
+        _book.title = book.title
+        _book.description = book.description
+        db.commit()
+        db.refresh(_book)
     return _book

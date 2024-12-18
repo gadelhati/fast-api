@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Path, Depends
 from config import SessionLocal
 from sqlalchemy.orm import Session
-from schema import BookSchema, RequestBook, Response
+from schema import BookSchema, Response
 import crud
 
 router = APIRouter()
@@ -14,10 +14,10 @@ def get_db():
         db.close()
 
 @router.post("/")
-async def create(request: RequestBook, db: Session=Depends(get_db)):
+async def create(request: BookSchema, db: Session=Depends(get_db)):
     try:
-        crud.create_book(db, book=request.parameter)
-        return Response(code=200, status="Ok", message="Created").dict(exclude_none=True)
+        _book = crud.create_book(db, book=request)
+        return Response(code=200, status="Ok", message="Created", result=_book).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -40,9 +40,9 @@ async def get_by_id(id: int, db: Session=Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/")
-async def update_book(request: RequestBook, db: Session=Depends(get_db)):
+async def update_book(request: BookSchema, db: Session=Depends(get_db)):
     try:
-        _book = crud.update_book(db, book_id=request.parameter.id, title=request.parameter.title, description=request.parameter.description)
+        _book = crud.update_book(db, request)
         if not _book:
             raise HTTPException(status_code=404, detail=f"Book {id} not found")
         return Response(code=200, status="Ok", message="Updated", result=_book).dict(exclude_none=True)
