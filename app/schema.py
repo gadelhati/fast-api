@@ -1,6 +1,5 @@
 from typing import List, Union, Optional, Generic, TypeVar
 from pydantic import BaseModel, Field
-from pydantic.generics import GenericModel
 from fastapi import Body
 from datetime import datetime
 
@@ -31,7 +30,7 @@ class User(BaseModel):
     class Config:
         orm_mode: True
 
-class Response(GenericModel, Generic[T]):
+class Response(BaseModel, Generic[T]):
     code: int
     status: str
     message: str
