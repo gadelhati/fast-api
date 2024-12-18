@@ -3,17 +3,21 @@
 from fastapi import Body, FastAPI, HTTPException
 # from component import Role, User
 from config import engine
+from sqlalchemy.exc import SQLAlchemyError
 
 import model
 import router
 
-model.Base.metadata.create_all(bind=engine)
+try:
+    model.Base.metadata.create_all(bind=engine)
+except SQLAlchemyError as e:
+    raise RuntimeError(f"Error creating tables in the database: {e}")
 
 app = FastAPI()
 
 @app.get("/")
-async def Home():
-    return "Welcome Home"
+async def home():
+    return {"message": "Welcome Home", "status": "success"}
 
 app.include_router(router.router, prefix="/book", tags=["book"])
 
