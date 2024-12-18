@@ -17,7 +17,7 @@ def get_db():
 async def create(request: BookSchema, db: Session=Depends(get_db)):
     try:
         _book = crud.create_book(db, book=request)
-        return Response(code=200, status="Ok", message="Created", result=_book).dict(exclude_none=True)
+        return await Response(code=200, status="Ok", message="Created", result=_book).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -25,7 +25,7 @@ async def create(request: BookSchema, db: Session=Depends(get_db)):
 async def get(db: Session=Depends(get_db)):
     try:
         _book = crud.get_book(db, 0, 100)
-        return Response(code=200, status="Ok", message="Finded all", result=_book).dict(exclude_none=True)
+        return await Response(code=200, status="Ok", message="Finded all", result=_book).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -35,7 +35,7 @@ async def get_by_id(id: int, db: Session=Depends(get_db)):
         _book = crud.get_book_by_id(db, id)
         if not _book:
             raise HTTPException(status_code=404, detail=f"Book {id} not found")
-        return Response(code=200, status="Ok", message="Finded one", result=_book).dict(exclude_none=True)
+        return await Response(code=200, status="Ok", message="Finded one", result=_book).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -45,7 +45,7 @@ async def update_book(request: BookSchema, db: Session=Depends(get_db)):
         _book = crud.update_book(db, request)
         if not _book:
             raise HTTPException(status_code=404, detail=f"Book {id} not found")
-        return Response(code=200, status="Ok", message="Updated", result=_book).dict(exclude_none=True)
+        return await Response(code=200, status="Ok", message="Updated", result=_book).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -55,6 +55,6 @@ async def delete(id: int, db: Session=Depends(get_db)):
         _book = crud.remove_book(db, book_id=id)
         if not _book:
             raise HTTPException(status_code=404, detail=f"Book {id} not found")
-        return Response(code=200, status="Ok", message="Delete one").dict(exclude_none=True)
+        return await Response(code=200, status="Ok", message="Delete one").dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
