@@ -12,3 +12,11 @@ uvicorn main:app --reload
 PYTHONPATH = C:\Users\gadel\AppData\Local\Programs\Python\Python313
 PATH = %PYTHONPATH%; %PYTHONPATH%\Scripts
 ```
+
+## roadmap
+### in development
+- [ ] authorization
+- [ ] authentification
+
+### in concept
+- [ ] nothing
