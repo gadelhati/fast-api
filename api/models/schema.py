@@ -19,11 +19,11 @@ class Role(BaseModel):
         orm_mode: True
 
 class User(BaseModel):
-    username: str
-    email: str
-    password: str
-    attempt: int # = Field(..., default=0, min_length=3, max_length=10)
-    active: bool = None
+    username: str = Field(..., unique=True, nullable=False)
+    email: str = Field(..., unique=True, nullable=False)
+    password: str = Field(...)
+    attempt: int = Field(..., min_length=3, max_length=10)
+    active: bool = Field(default=True)
     secret: Union[str, None] = None
     role: List[Role] = []
     start_datetime: datetime = Body()
