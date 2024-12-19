@@ -16,7 +16,7 @@ class Role(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False)
-    user_id = Column(Integer, ForeignKey("user2.id"))
+    user_id = Column(Integer, ForeignKey("user.id"))
     
 class User(Base):
     __tablename__ = "user"
