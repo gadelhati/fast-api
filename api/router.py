@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Path, Depends
 from api.config import SessionLocal
 from sqlalchemy.orm import Session
 from api.models.schema import BookSchema, Response
-import api.crud
+from api.crud import Crud
 
 router = APIRouter()
 
@@ -16,7 +16,7 @@ def get_db():
 @router.post("/")
 async def create(request: BookSchema, db: Session=Depends(get_db)):
     try:
-        _book = crud.create_book(db, book=request)
+        _book = Crud.create_book(db, book=request)
         return Response(code=200, status="Ok", message="Created", result=_book).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -24,7 +24,7 @@ async def create(request: BookSchema, db: Session=Depends(get_db)):
 @router.get("/")
 async def get(db: Session=Depends(get_db)):
     try:
-        _book = crud.get_book(db, 0, 100)
+        _book = Crud.get_book(db, 0, 100)
         return Response(code=200, status="Ok", message="Finded all", result=_book).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -32,7 +32,7 @@ async def get(db: Session=Depends(get_db)):
 @router.get("/{id}")
 async def get_by_id(id: int, db: Session=Depends(get_db)):
     try:
-        _book = crud.get_book_by_id(db, id)
+        _book = Crud.get_book_by_id(db, id)
         if not _book:
             raise HTTPException(status_code=404, detail=f"Book {id} not found")
         return Response(code=200, status="Ok", message="Finded one", result=_book).dict(exclude_none=True)
@@ -42,7 +42,7 @@ async def get_by_id(id: int, db: Session=Depends(get_db)):
 @router.put("/")
 async def update_book(request: BookSchema, db: Session=Depends(get_db)):
     try:
-        _book = crud.update_book(db, request)
+        _book = Crud.update_book(db, request)
         if not _book:
             raise HTTPException(status_code=404, detail=f"Book {id} not found")
         return Response(code=200, status="Ok", message="Updated", result=_book).dict(exclude_none=True)
@@ -52,7 +52,7 @@ async def update_book(request: BookSchema, db: Session=Depends(get_db)):
 @router.delete("/{id}")
 async def delete(id: int, db: Session=Depends(get_db)):
     try:
-        _book = crud.remove_book(db, book_id=id)
+        _book = Crud.remove_book(db, book_id=id)
         if not _book:
             raise HTTPException(status_code=404, detail=f"Book {id} not found")
         return Response(code=200, status="Ok", message="Delete one").dict(exclude_none=True)
