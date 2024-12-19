@@ -1,1 +1,4 @@
-app/.venv
+.venv
+api/.venv
+__pycache__
+api/__pycache_

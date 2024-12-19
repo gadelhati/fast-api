@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from model import Book
-from schema import BookSchema
+from api.models.model import Book
+from api.models.schema import BookSchema
 
 def get_book(db: Session, skip: int=0, limit: int=0) -> List[Book]:
     return db.query(Book).offset(skip).limit(limit).all()

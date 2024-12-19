@@ -1,9 +1,9 @@
 from fastapi import Body, FastAPI, HTTPException
-from config import engine
+from api.config import engine
 from sqlalchemy.exc import SQLAlchemyError
 
-import model
-import router
+from api.models import model
+from api.router import router
 
 try:
     model.Base.metadata.create_all(bind=engine)
@@ -16,4 +16,4 @@ app = FastAPI()
 async def home():
     return {"message": "Welcome Home", "status": "success"}
 
-app.include_router(router.router, prefix="/book", tags=["book"])
+app.include_router(router, prefix="/book", tags=["book"])
