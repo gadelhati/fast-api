@@ -12,14 +12,14 @@ class Book(Base):
     description = Column(String(255), nullable=True)
 
 class Role(Base):
-    __tablename__ = "role2"
+    __tablename__ = "role"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False)
     user_id = Column(Integer, ForeignKey("user2.id"))
     
 class User(Base):
-    __tablename__ = "user2"
+    __tablename__ = "user"
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, nullable=False)
