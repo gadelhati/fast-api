@@ -6,10 +6,16 @@ from typing import List
 from sqlalchemy.dialects.postgresql import UUID
 from uuid import uuid4
 
-class Book(Base):
-    __tablename__ = "book"
-
+class GenericAuditEntity(Base):
+    __abstract__ = True
     id = Column(UUID(as_uuid=True), default=uuid4, primary_key=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = Column(UUID(as_uuid=True), default=uuid4)
+    updated_by = Column(UUID(as_uuid=True), default=uuid4)
+
+class Book(GenericAuditEntity):
+    __tablename__ = "book"
     title = Column(String(50), nullable=False)
     description = Column(String(255), nullable=True)
 
@@ -20,17 +26,13 @@ user_role = Table(
     Column("role_id", UUID(as_uuid=True), ForeignKey("role.id"), primary_key=True)
 )
 
-class Role(Base):
+class Role(GenericAuditEntity):
     __tablename__ = "role"
-
-    id = Column(UUID(as_uuid=True), default=uuid4, primary_key=True, index=True)
     name = Column(String(50), nullable=False)
     # user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"))
     
-class User(Base):
+class User(GenericAuditEntity):
     __tablename__ = "user"
-
-    id = Column(UUID(as_uuid=True), default=uuid4, primary_key=True, index=True)
     username = Column(String(50), unique=True, nullable=False)
     email = Column(String(150), unique=True, nullable=False)
     password = Column(String(35), nullable=False)
