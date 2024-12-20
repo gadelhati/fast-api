@@ -25,7 +25,7 @@ class Role(Base):
 
     id = Column(UUID(as_uuid=True), default=uuid4, primary_key=True, index=True)
     name = Column(String(50), nullable=False)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"))
+    # user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"))
     
 class User(Base):
     __tablename__ = "user"
@@ -39,4 +39,5 @@ class User(Base):
     secret = Column(String(150))
     start_datetime = Column(DateTime, default=datetime.utcnow)
 
-    roles = relationship("Role", secondary=user_role, back_populates="users")
+    # roles = relationship("Role", secondary=user_role, back_populates="users")
+    roles = relationship("Role", secondary=user_role)
