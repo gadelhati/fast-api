@@ -1,12 +1,13 @@
 from typing import List, Union, Optional, Generic, TypeVar
 from pydantic import BaseModel, Field
-from fastapi import Body
 from datetime import datetime
+from fastapi import Body
+from uuid import UUID, uuid4
 
 T = TypeVar('T')
 
 class BookSchema(BaseModel):
-    id: Optional[int]=None
+    id: Optional[UUID]=Field(default_factory=uuid4)
     title: str
     description: Optional[str]=None
 
@@ -14,11 +15,13 @@ class BookSchema(BaseModel):
         orm_mode: True
 
 class Role(BaseModel):
+    id: Optional[UUID]=Field(default_factory=uuid4)
     name: str
     class Config:
         orm_mode: True
 
 class User(BaseModel):
+    id: Optional[UUID]=Field(default_factory=uuid4)
     username: str = Field(..., unique=True, nullable=False)
     email: str = Field(..., unique=True, nullable=False)
     password: str = Field(...)

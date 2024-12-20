@@ -3,6 +3,7 @@ from api.database import SessionLocal
 from sqlalchemy.orm import Session
 from api.models.schema import BookSchema, Response
 from api.repository.repositoryBook import RepositoryBook
+from uuid import UUID
 
 router = APIRouter()
 
@@ -30,7 +31,7 @@ async def get(db: Session=Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/{id}")
-async def get_by_id(id: int, db: Session=Depends(get_db)):
+async def get_by_id(id: UUID, db: Session=Depends(get_db)):
     try:
         _book = RepositoryBook.get_by_id(db, id)
         if not _book:
@@ -50,7 +51,7 @@ async def update(request: BookSchema, db: Session=Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/{id}")
-async def delete(id: int, db: Session=Depends(get_db)):
+async def delete(id: UUID, db: Session=Depends(get_db)):
     try:
         _book = RepositoryBook.remove(db, id=id)
         if not _book:

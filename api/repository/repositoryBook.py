@@ -2,12 +2,13 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from api.models.model import Book
 from api.models.schema import BookSchema
+from sqlalchemy.dialects.postgresql import UUID
 
 class RepositoryBook:
     def get(db: Session, skip: int=0, limit: int=0) -> List[Book]:
         return db.query(Book).offset(skip).limit(limit).all()
 
-    def get_by_id(db: Session, id: int) -> Optional[Book]:
+    def get_by_id(db: Session, id: UUID) -> Optional[Book]:
         return db.query(Book).filter(Book.id == id).first()
 
     def create(db: Session, created: BookSchema) -> Book:
@@ -26,7 +27,7 @@ class RepositoryBook:
             db.refresh(_object)
         return _object
 
-    def remove(db: Session, id: int) -> Book:
+    def remove(db: Session, id: UUID) -> Book:
         _object = RepositoryBook.get_by_id(db, id)
         if _object:
             db.delete(_object)
