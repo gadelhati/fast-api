@@ -18,7 +18,15 @@ def get_db():
 async def create(request: BookSchema, db: Session=Depends(get_db)):
     try:
         _book = RepositoryBook.create(db, created=request)
-        return Response(code=200, status="Ok", message="Created", result=_book).dict(exclude_none=True)
+        return Response(code=201, status="Created", message="Created", result=_book).dict(exclude_none=True)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.patch("/")
+async def cancel(request: BookSchema, db: Session=Depends(get_db)):
+    try:
+        _book = RepositoryBook.cancel(db, cancelled=request)
+        return Response(code=202, status="Accepted", message="Cancelled", result=_book).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -46,7 +54,7 @@ async def update(request: BookSchema, db: Session=Depends(get_db)):
         _book = RepositoryBook.update(db, request)
         if not _book:
             raise HTTPException(status_code=404, detail=f"Book {id} not found")
-        return Response(code=200, status="Ok", message="Updated", result=_book).dict(exclude_none=True)
+        return Response(code=202, status="Accepted", message="Updated", result=_book).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -56,6 +64,6 @@ async def delete(id: UUID, db: Session=Depends(get_db)):
         _book = RepositoryBook.remove(db, id=id)
         if not _book:
             raise HTTPException(status_code=404, detail=f"Book {id} not found")
-        return Response(code=200, status="Ok", message="Delete one", result=_book).dict(exclude_none=True)
+        return Response(code=204, status="No Content", message="Delete one", result=_book).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
