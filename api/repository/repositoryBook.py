@@ -17,6 +17,13 @@ class RepositoryBook:
         db.commit()
         db.refresh(_object)
         return _object
+    
+    def cancel(db: Session, cancelled: BookSchema) -> Book:
+        _object = RepositoryBook.get_by_id(db, cancelled.id)
+        if _object:
+            db.delete(_object)
+            db.commit()
+        return _object
 
     def update(db: Session, updated: BookSchema) -> Book:
         _object = RepositoryBook.get_by_id(db, updated.id)
