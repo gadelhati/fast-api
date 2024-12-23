@@ -23,7 +23,7 @@ class SchemaUser(BaseModel):
     id: Optional[UUID]=Field(default_factory=uuid4)
     username: str = Field(..., unique=True, nullable=False)
     email: str = Field(..., unique=True, nullable=False)
-    password: str = Field(..., min_length=7, max_length=10)
+    password: str = Field(..., min_length=7, max_length=255)
     attempt: int = Field(default=0, ge=0, le=10)
     active: bool = Field(default=True)
     secret: Union[str, None] = None

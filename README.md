@@ -4,7 +4,7 @@
 ```
 python -m venv .venv
 .venv/Scripts/activate
-pip install fastapi sqlalchemy psycopg2-binary uvicorn python-multipart pwdlib[argon2]
+pip install fastapi sqlalchemy psycopg2-binary uvicorn python-multipart passlib[bcrypt]
 uvicorn src.main:app --reload
 ```
 ## environments variables

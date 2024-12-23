@@ -4,9 +4,7 @@ from typing import List, Optional
 from src.model.model import ModelUser
 from src.schema.schema import SchemaUser
 from sqlalchemy.dialects.postgresql import UUID
-# from pwdlib import PasswordHash
-
-# pwd_context = PasswordHash.recommended()
+from passlib.hash import pbkdf2_sha256
 
 class ServiceUser:
     def get(db: Session, skip: int=0, limit: int=0) -> List[ModelUser]:
@@ -24,7 +22,7 @@ class ServiceUser:
         _object_email = ServiceUser.get_by_email(db, created.email)
         if _object_username or _object_email:
             raise HTTPException(status_code=409, detail="Conflict")
-        _object = ModelUser(username=created.username, password=created.password, email=created.email)
+        _object = ModelUser(username=created.username, password=pbkdf2_sha256.hash(created.password), email=created.email)
         db.add(_object)
         db.commit()
         db.refresh(_object)
@@ -41,7 +39,7 @@ class ServiceUser:
         _object = ServiceUser.get_by_id(db, updated.id)
         if _object:
             _object.username = updated.username
-            _object.password = updated.password
+            _object.password = pbkdf2_sha256.hash(updated.password)
             db.commit()
             db.refresh(_object)
         return _object
@@ -52,8 +50,3 @@ class ServiceUser:
             db.delete(_object)
             db.commit()
         return _object
-    
-    # def password_hash(password: str):
-    #     return pwd_context.hash(password)
-    # def password_verify(password_plain: str, password_hash: str):
-    #     return pwd_context.verity(password_plain, password_hash)
