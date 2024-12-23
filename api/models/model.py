@@ -13,7 +13,7 @@ class GenericAuditEntity(Base):
     created_by = Column(UUID(as_uuid=True), default=uuid4)
     updated_by = Column(UUID(as_uuid=True), default=uuid4)
 
-class Book(GenericAuditEntity):
+class ModelBook(GenericAuditEntity):
     __tablename__ = "book"
     title = Column(String(50), nullable=False)
     description = Column(String(255), nullable=True)
@@ -25,12 +25,12 @@ user_role = Table(
     Column("role_id", UUID(as_uuid=True), ForeignKey("role.id"), primary_key=True)
 )
 
-class Role(GenericAuditEntity):
+class ModelRole(GenericAuditEntity):
     __tablename__ = "role"
     name = Column(String(50), nullable=False)
     # user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"))
     
-class User(GenericAuditEntity):
+class ModelUser(GenericAuditEntity):
     __tablename__ = "user"
     username = Column(String(50), unique=True, nullable=False)
     email = Column(String(150), unique=True, nullable=False)
@@ -41,4 +41,4 @@ class User(GenericAuditEntity):
     start_datetime = Column(DateTime, default=datetime.utcnow)
 
     # roles = relationship("Role", secondary=user_role, back_populates="users")
-    roles = relationship("Role", secondary=user_role)
+    roles = relationship("ModelRole", secondary=user_role)

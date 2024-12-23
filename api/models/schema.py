@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 
 T = TypeVar('T')
 
-class BookSchema(BaseModel):
+class SchemaBook(BaseModel):
     id: Optional[UUID]=Field(default_factory=uuid4)
     title: str
     description: Optional[str]=None
@@ -14,13 +14,13 @@ class BookSchema(BaseModel):
     class Config:
         orm_mode: True
 
-class Role(BaseModel):
+class SchemaRole(BaseModel):
     id: Optional[UUID]=Field(default_factory=uuid4)
     name: str
     class Config:
         orm_mode: True
 
-class User(BaseModel):
+class SchemaUser(BaseModel):
     id: Optional[UUID]=Field(default_factory=uuid4)
     username: str = Field(..., unique=True, nullable=False)
     email: str = Field(..., unique=True, nullable=False)
@@ -28,7 +28,7 @@ class User(BaseModel):
     attempt: int = Field(..., min_length=3, max_length=10)
     active: bool = Field(default=True)
     secret: Union[str, None] = None
-    role: List[Role] = []
+    role: List[SchemaRole] = []
     start_datetime: datetime = Body()
     class Config:
         orm_mode: True
