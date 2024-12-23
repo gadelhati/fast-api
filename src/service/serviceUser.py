@@ -20,7 +20,7 @@ class ServiceUser:
     def login(db: Session, created: SchemaUser) -> ModelUser:
         _object_username = ServiceUser.get_by_username(db, created.username)
         _match = pbkdf2_sha256.verify(created.password, _object_username.password)
-        if _object_username and _match:
+        if not _object_username or not _match:
             raise HTTPException(status_code=401, detail="Unauthorized")
         return _object_username
     
