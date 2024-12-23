@@ -4,3 +4,4 @@ psycopg2-binary==2.9.10
 uvicorn==0.34.0
 python-multipart==0.0.20
 passlib[bcrypt]==1.7.4
+python-jose==3.3.0
