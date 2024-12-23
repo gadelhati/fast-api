@@ -1,9 +1,9 @@
 from fastapi import Body, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
-from api.database import engine
-from api.models import model
-from api.controller.controllerBook import router
+from src.database import engine
+from src.model import model
+from src.route.routeBook import router
 
 try:
     model.Base.metadata.create_all(bind=engine)

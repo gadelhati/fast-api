@@ -5,7 +5,7 @@
 python -m venv .venv
 .venv/Scripts/activate
 pip install fastapi sqlalchemy psycopg2-binary uvicorn
-uvicorn main:app --reload
+uvicorn src.main:app --reload
 ```
 ## environments variables
 ```
@@ -19,4 +19,4 @@ PATH = %PYTHONPATH%; %PYTHONPATH%\Scripts
 - [ ] authentification
 
 ### in concept
-- [ ] nothing
+- [x] nothing

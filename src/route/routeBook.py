@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Path, Depends
-from api.database import SessionLocal
+from src.database import SessionLocal
 from sqlalchemy.orm import Session
-from api.models.schema import SchemaBook, Response
-from api.repository.repositoryBook import RepositoryBook
+from src.schema.schema import SchemaBook, Response
+from src.service.serviceBook import ServiceBook
 from uuid import UUID
 
 router = APIRouter()
@@ -17,7 +17,7 @@ def get_db():
 @router.post("/")
 async def create(request: SchemaBook, db: Session=Depends(get_db)):
     try:
-        _book = RepositoryBook.create(db, created=request)
+        _book = ServiceBook.create(db, created=request)
         return Response(code=201, status="Created", message="Created", result=_book).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -25,7 +25,7 @@ async def create(request: SchemaBook, db: Session=Depends(get_db)):
 @router.patch("/")
 async def cancel(request: SchemaBook, db: Session=Depends(get_db)):
     try:
-        _book = RepositoryBook.cancel(db, cancelled=request)
+        _book = ServiceBook.cancel(db, cancelled=request)
         return Response(code=202, status="Accepted", message="Cancelled", result=_book).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -33,7 +33,7 @@ async def cancel(request: SchemaBook, db: Session=Depends(get_db)):
 @router.get("/")
 async def get(db: Session=Depends(get_db)):
     try:
-        _book = RepositoryBook.get(db, 0, 100)
+        _book = ServiceBook.get(db, 0, 100)
         return Response(code=200, status="Ok", message="Finded all", result=_book).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -41,7 +41,7 @@ async def get(db: Session=Depends(get_db)):
 @router.get("/{id}")
 async def get_by_id(id: UUID, db: Session=Depends(get_db)):
     try:
-        _book = RepositoryBook.get_by_id(db, id)
+        _book = ServiceBook.get_by_id(db, id)
         if not _book:
             raise HTTPException(status_code=404, detail=f"Book {id} not found")
         return Response(code=200, status="Ok", message="Finded one", result=_book).dict(exclude_none=True)
@@ -51,7 +51,7 @@ async def get_by_id(id: UUID, db: Session=Depends(get_db)):
 @router.put("/")
 async def update(request: SchemaBook, db: Session=Depends(get_db)):
     try:
-        _book = RepositoryBook.update(db, updated=request)
+        _book = ServiceBook.update(db, updated=request)
         if not _book:
             raise HTTPException(status_code=404, detail=f"Book {id} not found")
         return Response(code=202, status="Accepted", message="Updated", result=_book).dict(exclude_none=True)
@@ -61,7 +61,7 @@ async def update(request: SchemaBook, db: Session=Depends(get_db)):
 @router.delete("/{id}")
 async def delete(id: UUID, db: Session=Depends(get_db)):
     try:
-        _book = RepositoryBook.remove(db, id=id)
+        _book = ServiceBook.remove(db, id=id)
         if not _book:
             raise HTTPException(status_code=404, detail=f"Book {id} not found")
         return Response(code=204, status="No Content", message="Delete one", result=_book).dict(exclude_none=True)
