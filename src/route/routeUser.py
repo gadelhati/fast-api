@@ -52,7 +52,7 @@ async def get_by_id(id: UUID, db: Session=Depends(get_db)):
     try:
         _result = ServiceUser.get_by_id(db, id)
         if not _result:
-            raise HTTPException(status_code=404, detail=f"Book {id} not found")
+            raise HTTPException(status_code=404, detail=f"Object {id} not found")
         return Response(code=200, status="Ok", message="Finded one", result=_result).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -62,7 +62,7 @@ async def update(request: SchemaUser, db: Session=Depends(get_db)):
     try:
         _result = ServiceUser.update(db, updated=request)
         if not _result:
-            raise HTTPException(status_code=404, detail=f"Book {id} not found")
+            raise HTTPException(status_code=404, detail=f"Object {id} not found")
         return Response(code=202, status="Accepted", message="Updated", result=_result).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -72,7 +72,7 @@ async def delete(id: UUID, db: Session=Depends(get_db)):
     try:
         _result = ServiceUser.remove(db, id=id)
         if not _result:
-            raise HTTPException(status_code=404, detail=f"Book {id} not found")
+            raise HTTPException(status_code=404, detail=f"Object {id} not found")
         return Response(code=204, status="No Content", message="Delete one", result=_result).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
