@@ -12,7 +12,7 @@ class ServiceBook:
         return db.query(ModelBook).filter(ModelBook.id == id).first()
 
     def create(db: Session, created: SchemaBook) -> ModelBook:
-        _object = ModelBook(title=created.title, description=created.description)
+        _object = ModelBook(created.title, description=created.description)
         db.add(_object)
         db.commit()
         db.refresh(_object)

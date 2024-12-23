@@ -23,12 +23,12 @@ class SchemaUser(BaseModel):
     id: Optional[UUID]=Field(default_factory=uuid4)
     username: str = Field(..., unique=True, nullable=False)
     email: str = Field(..., unique=True, nullable=False)
-    password: str = Field(...)
-    attempt: int = Field(..., min_length=3, max_length=10)
+    password: str = Field(..., min_length=7, max_length=10)
+    attempt: int = Field(default=0, ge=0, le=10)
     active: bool = Field(default=True)
     secret: Union[str, None] = None
     role: List[SchemaRole] = []
-    start_datetime: datetime = Body()
+    start_datetime: Optional[datetime] = Body(default=None)
     class Config:
         orm_mode: True
 

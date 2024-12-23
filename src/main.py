@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 from src.database import engine
 from src.model import model
-from src.route.routeBook import router
+from src.route.routeBook import book
+from src.route.routeUser import user
 
 try:
     model.Base.metadata.create_all(bind=engine)
@@ -30,4 +31,5 @@ app.add_middleware(
 async def home():
     return {"message": "Welcome Home", "status": "success"}
 
-app.include_router(router, prefix="/book", tags=["book"])
+app.include_router(book, prefix="/book", tags=["book"])
+app.include_router(user, prefix="/user", tags=["user"])
