@@ -17,6 +17,13 @@ class ServiceUser:
     def get_by_email(db: Session, email: str) -> Optional[ModelUser]:
         return db.query(ModelUser).filter(ModelUser.email == email).first()
 
+    def login(db: Session, created: SchemaUser) -> ModelUser:
+        _object_username = ServiceUser.get_by_username(db, created.username)
+        _match = pbkdf2_sha256.verify(created.password, _object_username.password)
+        if _object_username and _match:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+        return _object_username
+    
     def create(db: Session, created: SchemaUser) -> ModelUser:
         _object_username = ServiceUser.get_by_username(db, created.username)
         _object_email = ServiceUser.get_by_email(db, created.email)

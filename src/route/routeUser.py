@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Path, Depends
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi.security import OAuth2PasswordRequestForm
 from src.database import SessionLocal
 from sqlalchemy.orm import Session
 from src.schema.schema import SchemaUser, Response
@@ -13,6 +14,14 @@ def get_db():
         yield db
     finally:
         db.close()
+
+@user.post("/login", status_code=200)
+async def create(request: SchemaUser, db: Session=Depends(get_db)):
+    try:
+        _result = ServiceUser.login(db, created=request)
+        return Response(code=200, status="Ok", message="Ok", result=_result).dict(exclude_none=True)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @user.post("/", status_code=201)
 async def create(request: SchemaUser, db: Session=Depends(get_db)):
