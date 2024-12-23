@@ -51,7 +51,7 @@ async def get_by_id(id: UUID, db: Session=Depends(get_db)):
 @router.put("/")
 async def update(request: SchemaBook, db: Session=Depends(get_db)):
     try:
-        _book = RepositoryBook.update(db, request)
+        _book = RepositoryBook.update(db, updated=request)
         if not _book:
             raise HTTPException(status_code=404, detail=f"Book {id} not found")
         return Response(code=202, status="Accepted", message="Updated", result=_book).dict(exclude_none=True)

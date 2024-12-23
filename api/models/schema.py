@@ -10,7 +10,6 @@ class SchemaBook(BaseModel):
     id: Optional[UUID]=Field(default_factory=uuid4)
     title: str
     description: Optional[str]=None
-
     class Config:
         orm_mode: True
 
