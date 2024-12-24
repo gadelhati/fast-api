@@ -15,7 +15,7 @@ PATH = %PYTHONPATH%; %PYTHONPATH%\Scripts
 
 ## roadmap
 ### in development
-- [ ] authorization
+- [x] authorization
 
 ### in concept
-- [x] nothing
+- [x] implements tests
