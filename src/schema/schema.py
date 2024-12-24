@@ -32,6 +32,14 @@ class SchemaUser(BaseModel):
     class Config:
         orm_mode: True
 
+class SchemaToken(BaseModel):
+    tokenType: str
+    accessToken: str
+    refreshToken: str
+    roles: List[SchemaRole] = []
+    class Config:
+        orm_mode: True
+    
 class Response(BaseModel, Generic[T]):
     code: int
     status: str

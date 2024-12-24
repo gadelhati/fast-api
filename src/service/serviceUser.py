@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from src.model.model import ModelUser
 from src.schema.schema import SchemaUser
+from src.schema.schema import SchemaToken
 from sqlalchemy.dialects.postgresql import UUID
 from passlib.hash import pbkdf2_sha256
 from jose import jwt
@@ -26,7 +27,7 @@ class ServiceUser:
         _match = pbkdf2_sha256.verify(created.password, _object_username.password)
         if not _object_username or not _match:
             raise HTTPException(status_code=401, detail="Unauthorized")
-        return ServiceUser.creat_jwt(_object_username.username)
+        return ServiceUser.creat_jwt(_object_username)
     
     def create(db: Session, created: SchemaUser) -> ModelUser:
         _object_username = ServiceUser.get_by_username(db, created.username)
@@ -62,18 +63,15 @@ class ServiceUser:
             db.commit()
         return _object
     
-    def creat_jwt(_username: str):
+    def creat_jwt(created: SchemaUser):
         claims = {
             'iss': 'fastAPI',
-            'sub': _username,
+            'sub': created.username,
             'aud': '*',
             'exp': int(time.time()) + (4 * 60 * 60),
             'nbf': int(time.time()),
             'iat': int(time.time()),
             'jti': 'uuid.uuid4()'
         }
-        return jwt.encode(
-                claims,
-                'secret',
-                algorithm='HS256'
-            )
+        _object = SchemaToken(tokenType='Bearer ', accessToken=jwt.encode(claims, 'secret', algorithm='HS256'), refreshToken='', roles=created.roles)
+        return _object
