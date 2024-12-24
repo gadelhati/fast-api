@@ -32,8 +32,12 @@ class SchemaUser(BaseModel):
     class Config:
         orm_mode: True
 
+class SchemaSwagger(BaseModel):
+    username: str = Field(..., unique=True, nullable=False)
+    password: str = Field(..., min_length=7, max_length=255, nullable=False)
+
 class SchemaToken(BaseModel):
-    tokenType: str
+    tokenType: str = 'Bearer '
     accessToken: str
     refreshToken: str
     roles: List[SchemaRole] = []

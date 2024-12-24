@@ -1,22 +1,23 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from src.database import SessionLocal
+from src.database import get_db
 from sqlalchemy.orm import Session
-from src.schema.schema import SchemaUser, Response
+from src.schema.schema import SchemaUser, SchemaSwagger, Response
 from src.service.serviceUser import ServiceUser
 from uuid import UUID
 
 user = APIRouter()
 
-def get_db():
-    db = SessionLocal()
+@user.post("/swagger", status_code=200)
+async def create(form_data: OAuth2PasswordRequestForm=Depends(), db: Session=Depends(get_db)):
     try:
-        yield db
-    finally:
-        db.close()
+        print(form_data)
+        return Response(code=200, status="Ok", message="Ok", result="_result").dict(exclude_none=True)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @user.post("/login", status_code=200)
-async def create(request: SchemaUser, db: Session=Depends(get_db)):
+async def create(request: SchemaSwagger, db: Session=Depends(get_db)):
     try:
         _result = ServiceUser.login(db, created=request)
         return Response(code=200, status="Ok", message="Ok", result=_result).dict(exclude_none=True)
@@ -24,7 +25,7 @@ async def create(request: SchemaUser, db: Session=Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @user.post("/", status_code=201)
-async def create(request: SchemaUser, db: Session=Depends(get_db)):
+async def create(request: SchemaUser, db: Session=Depends(get_db), current_user=Depends(ServiceUser.get_current_user)):
     try:
         _result = ServiceUser.create(db, created=request)
         return Response(code=201, status="Created", message="Created", result=_result).dict(exclude_none=True)
@@ -58,7 +59,7 @@ async def get_by_id(id: UUID, db: Session=Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @user.put("/", status_code=202)
-async def update(request: SchemaUser, db: Session=Depends(get_db)):
+async def update(request: SchemaUser, db: Session=Depends(get_db), current_user=Depends(ServiceUser.get_current_user)):
     try:
         _result = ServiceUser.update(db, updated=request)
         if not _result:
@@ -68,7 +69,7 @@ async def update(request: SchemaUser, db: Session=Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @user.delete("/{id}", status_code=204)
-async def delete(id: UUID, db: Session=Depends(get_db)):
+async def delete(id: UUID, db: Session=Depends(get_db), current_user=Depends(ServiceUser.get_current_user)):
     try:
         _result = ServiceUser.remove(db, id=id)
         if not _result:

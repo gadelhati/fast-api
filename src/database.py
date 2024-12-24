@@ -9,3 +9,10 @@ DATABASE_URL = "postgresql://postgresql:efjbe46Ni4a6WC8i5h2Vn3FOtGwZQVTm@dpg-ctc
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

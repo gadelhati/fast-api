@@ -1,4 +1,5 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from src.model.model import ModelUser
@@ -7,9 +8,10 @@ from src.schema.schema import SchemaToken
 from sqlalchemy.dialects.postgresql import UUID
 from passlib.hash import pbkdf2_sha256
 from jose import jwt
+from src.database import get_db
 
 import time
-import uuid
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/swagger")
 
 class ServiceUser:
     def get(db: Session, skip: int=0, limit: int=0) -> List[ModelUser]:
@@ -73,5 +75,8 @@ class ServiceUser:
             'iat': int(time.time()),
             'jti': 'uuid.uuid4()'
         }
-        _object = SchemaToken(tokenType='Bearer ', accessToken=jwt.encode(claims, 'secret', algorithm='HS256'), refreshToken='', roles=created.roles)
+        _object = SchemaToken(accessToken=jwt.encode(claims, 'secret', algorithm='HS256'), refreshToken='', roles=created.roles)
         return _object
+    
+    def get_current_user(db: Session=Depends(get_db), token: str=Depends(oauth2_scheme)):
+        ...
