@@ -14,8 +14,10 @@ except SQLAlchemyError as e:
 app = FastAPI()
 
 origins = [
-    "http://127.0.0.2",
-    "http://127.0.0.2:8081",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1",
+    "http://localhost:5173",
+    "http://localhost",
     "https://example.com"
 ]
 
