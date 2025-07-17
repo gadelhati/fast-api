@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from src.model.model import ModelBook
+from model.mixin import ModelBook
 from src.schema.schema import SchemaBook
 from sqlalchemy.dialects.postgresql import UUID
 

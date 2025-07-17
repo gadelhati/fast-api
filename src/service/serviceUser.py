@@ -2,7 +2,7 @@ from fastapi import HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from src.model.model import ModelUser
+from model.mixin import ModelUser
 from src.schema.schema import SchemaUser
 from src.schema.schema import SchemaToken
 from sqlalchemy.dialects.postgresql import UUID
