@@ -2,12 +2,12 @@ from fastapi import Body, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 from src.database import engine
-from src.model import model
+from model import mixin
 from src.route.routeBook import book
 from src.route.routeUser import user
 
 try:
-    model.Base.metadata.create_all(bind=engine)
+    mixin.Base.metadata.create_all(bind=engine)
 except SQLAlchemyError as e:
     raise RuntimeError(f"Error creating tables in the database: {e}")
 
