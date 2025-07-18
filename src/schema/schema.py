@@ -315,6 +315,7 @@ class DTOPasswordResetConfirm(BaseModel):
         return Validation.validate_password(v)
 
 # Rebuild models to resolve forward references in circular relationships
+DTOUserBasic.model_rebuild()
 DTOUserUpdate.model_rebuild()
 DTOUserResponse.model_rebuild()
 DTORoleBasic.model_rebuild()
