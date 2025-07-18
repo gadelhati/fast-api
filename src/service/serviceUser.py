@@ -3,8 +3,8 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from model.mixin import ModelUser
-from src.schema.schema import SchemaUser
-from src.schema.schema import SchemaToken
+from schema.schema_old import SchemaUser
+from schema.schema_old import SchemaToken
 from sqlalchemy.dialects.postgresql import UUID
 from passlib.hash import pbkdf2_sha256
 from jose import jwt

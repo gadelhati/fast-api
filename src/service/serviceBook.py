@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from model.mixin import ModelBook
-from src.schema.schema import SchemaBook
+from schema.schema_old import SchemaBook
 from sqlalchemy.dialects.postgresql import UUID
 
 class ServiceBook:
