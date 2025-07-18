@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from src.database import get_db
 from sqlalchemy.orm import Session
-from src.schema.schema import SchemaBook, Response
+from schema.schema_old import SchemaBook, Response
 from src.service.serviceUser import ServiceUser
 from src.service.serviceBook import ServiceBook
 from uuid import UUID
