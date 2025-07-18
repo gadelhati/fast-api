@@ -85,6 +85,17 @@ class TimestampMixin(BaseModel):
     
     model_config = ConfigDict(json_encoders={UUID: str, datetime: lambda v: v.isoformat()}, from_attributes=True)
     
+class DTOUserBasic(BaseModel):
+    """Base DTO for user (used in listings and relationships)"""
+    id: UUID
+    username: str
+    email: EmailStr
+    first_name: str
+    last_name: str
+    is_active: bool
+
+    model_config = ConfigDict(json_encoders={UUID: str}, from_attributes=True)
+
 class DTOUserCreate(BaseModel):
     """DTO for creating a request"""
     email: EmailStr
@@ -228,17 +239,6 @@ class DTORoleResponse(DTOAuditMixin, DTOSoftDeleteMixin):
     is_default: bool
     permissions: List['DTOPermissionBasic'] = []
     users: List['DTOUserBasic'] = []
-
-class DTOUserBasic(BaseModel):
-    """Base DTO for user (used in listings and relationships)"""
-    id: UUID
-    username: str
-    email: EmailStr
-    first_name: str
-    last_name: str
-    is_active: bool
-
-    model_config = ConfigDict(json_encoders={UUID: str}, from_attributes=True)
 
 class DTOPermissionBasic(BaseModel):
     """Basic DTO for permission (used in listings and relationships)"""
