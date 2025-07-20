@@ -2,12 +2,11 @@ from fastapi import Body, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 from src.database import engine
-from model import mixin
-from src.route.routeBook import book
 from src.route.routeUser import user
+from src.database import Base
 
 try:
-    mixin.Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 except SQLAlchemyError as e:
     raise RuntimeError(f"Error creating tables in the database: {e}")
 
@@ -34,5 +33,4 @@ app.add_middleware(
 async def home():
     return {"message": "Welcome Home", "status": "success"}
 
-app.include_router(book, prefix="/book", tags=["book"])
 app.include_router(user, prefix="/user", tags=["user"])

@@ -3,9 +3,9 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from typing import Optional, List
 
-from model import Permission
-from schema import DTOPermissionCreate, DTOPermissionUpdate, DTOPermissionResponse
-from services.base_service import BaseService
+from src.model.permission import Permission
+from src.schema.permission import DTOPermissionCreate, DTOPermissionUpdate, DTOPermissionResponse
+from src.service.base import BaseService
 
 class PermissionService(BaseService[Permission, DTOPermissionCreate, DTOPermissionUpdate, DTOPermissionResponse]):
     """Permission service with additional permission-specific methods"""

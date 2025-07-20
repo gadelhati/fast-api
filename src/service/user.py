@@ -3,9 +3,12 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from typing import Optional, List
 
-from model import User
-from schema import DTOUserCreate, DTOUserUpdate, DTOUserResponse
+from src.model.user import User
+from src.schema.user import DTOUserCreate, DTOUserUpdate, DTOUserResponse
 from src.service.base import BaseService
+from src.schema import (DTOUserCreate, DTOUserUpdate, DTOUserResponse)
+from pydantic import ValidationError
+from src.service.service import NotFoundError, ServiceException
 
 class UserService(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserResponse]):
     """User service with additional user-specific methods"""
@@ -35,8 +38,8 @@ class UserService(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRespons
     
     def update_roles(self, user_id: UUID, role_ids: List[UUID], current_user_id: Optional[UUID] = None) -> DTOUserResponse:
         """Update user roles"""
-        from model import Role
-        from schema import Validation
+        from src.model import Role
+        from src.schema import Validation
         
         if len(role_ids) > Validation.MAX_ROLES_PER_USER:
             raise ValidationError(

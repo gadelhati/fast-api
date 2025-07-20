@@ -3,9 +3,10 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from typing import Optional, List
 
-from model import Role
-from schema import DTORoleCreate, DTORoleUpdate, DTORoleResponse
-from services.base_service import BaseService
+from src.model.role import Role
+from src.schema import DTORoleCreate, DTORoleUpdate, DTORoleResponse
+from src.service.base import BaseService, ValidationError
+from src.service.service import NotFoundError, ServiceException
 
 class RoleService(BaseService[Role, DTORoleCreate, DTORoleUpdate, DTORoleResponse]):
     """Role service with additional role-specific methods"""
@@ -30,8 +31,8 @@ class RoleService(BaseService[Role, DTORoleCreate, DTORoleUpdate, DTORoleRespons
         current_user_id: Optional[UUID] = None
     ) -> DTORoleResponse:
         """Update role permissions"""
-        from model import Permission
-        from schema import Validation
+        from src.model import Permission
+        from src.schema import Validation
         
         if len(permission_ids) > Validation.MAX_PERMISSIONS_PER_ROLE:
             raise ValidationError(

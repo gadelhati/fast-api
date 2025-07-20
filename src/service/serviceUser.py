@@ -2,9 +2,10 @@ from fastapi import HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from model.mixin import ModelUser
-from schema.schema_old import SchemaUser
-from schema.schema_old import SchemaToken
+from src.model.user import User
+from src.schema.auth import DTOToken
+from src.schema.base_basic import DTOUserBasic
+from src.schema.user import DTOUserCreate, DTOUserUpdate, DTOUserResponse
 from sqlalchemy.dialects.postgresql import UUID
 from passlib.hash import pbkdf2_sha256
 from jose import jwt
@@ -14,42 +15,42 @@ import time
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/swagger")
 
 class ServiceUser:
-    def get(db: Session, skip: int=0, limit: int=0) -> List[ModelUser]:
-        return db.query(ModelUser).offset(skip).limit(limit).all()
+    def get(db: Session, skip: int=0, limit: int=0) -> List[User]:
+        return db.query(User).offset(skip).limit(limit).all()
 
-    def get_by_id(db: Session, id: UUID) -> Optional[ModelUser]:
-        return db.query(ModelUser).filter(ModelUser.id == id).first()
-    def get_by_username(db: Session, username: str) -> Optional[ModelUser]:
-        return db.query(ModelUser).filter(ModelUser.username == username).first()
-    def get_by_email(db: Session, email: str) -> Optional[ModelUser]:
-        return db.query(ModelUser).filter(ModelUser.email == email).first()
+    def get_by_id(db: Session, id: UUID) -> Optional[User]:
+        return db.query(User).filter(User.id == id).first()
+    def get_by_username(db: Session, username: str) -> Optional[User]:
+        return db.query(User).filter(User.username == username).first()
+    def get_by_email(db: Session, email: str) -> Optional[User]:
+        return db.query(User).filter(User.email == email).first()
 
-    def login(db: Session, created: SchemaUser) -> ModelUser:
+    def login(db: Session, created: DTOUserBasic) -> User:
         _object_username = ServiceUser.get_by_username(db, created.username)
         _match = pbkdf2_sha256.verify(created.password, _object_username.password)
         if not _object_username or not _match:
             raise HTTPException(status_code=401, detail="Unauthorized")
         return ServiceUser.creat_jwt(_object_username)
     
-    def create(db: Session, created: SchemaUser) -> ModelUser:
+    def create(db: Session, created: DTOUserCreate) -> User:
         _object_username = ServiceUser.get_by_username(db, created.username)
         _object_email = ServiceUser.get_by_email(db, created.email)
         if _object_username or _object_email:
             raise HTTPException(status_code=409, detail="Conflict")
-        _object = ModelUser(username=created.username, password=pbkdf2_sha256.hash(created.password), email=created.email)
+        _object = User(username=created.username, password=pbkdf2_sha256.hash(created.password), email=created.email)
         db.add(_object)
         db.commit()
         db.refresh(_object)
         return _object
     
-    def cancel(db: Session, cancelled: SchemaUser) -> ModelUser:
+    def cancel(db: Session, cancelled: DTOUserBasic) -> User:
         _object = ServiceUser.get_by_id(db, cancelled.id)
         if _object:
             db.delete(_object)
             db.commit()
         return _object
 
-    def update(db: Session, updated: SchemaUser) -> ModelUser:
+    def update(db: Session, updated: DTOUserUpdate) -> User:
         _object = ServiceUser.get_by_id(db, updated.id)
         if _object:
             _object.username = updated.username
@@ -58,14 +59,14 @@ class ServiceUser:
             db.refresh(_object)
         return _object
 
-    def remove(db: Session, id: UUID) -> ModelUser:
+    def remove(db: Session, id: UUID) -> User:
         _object = ServiceUser.get_by_id(db, id)
         if _object:
             db.delete(_object)
             db.commit()
         return _object
     
-    def creat_jwt(created: SchemaUser):
+    def creat_jwt(created: DTOUserCreate):
         claims = {
             'iss': 'fastAPI',
             'sub': created.username,
@@ -75,7 +76,7 @@ class ServiceUser:
             'iat': int(time.time()),
             'jti': 'uuid.uuid4()'
         }
-        _object = SchemaToken(accessToken=jwt.encode(claims, 'secret', algorithm='HS256'), refreshToken='', roles=created.roles)
+        _object = DTOToken(accessToken=jwt.encode(claims, 'secret', algorithm='HS256'), refreshToken='', roles=created.roles)
         return _object
     
     def get_current_user(db: Session=Depends(get_db), token: str=Depends(oauth2_scheme)):

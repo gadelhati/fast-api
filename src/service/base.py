@@ -6,9 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel
 import logging
-
-from model import Base, AuditMixin, SoftDeleteMixin
-from schema import DTOAuditMixin, DTOSoftDeleteMixin
+from src.database import Base
 
 # Type variables for generic service
 TModel = TypeVar('TModel', bound=Base)

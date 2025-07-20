@@ -3,17 +3,19 @@ from uuid import UUID
 from datetime import datetime
 from sqlalchemy.orm import Session, Query
 from sqlalchemy.exc import IntegrityError as IE
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 import logging
 from contextlib import contextmanager
 from werkzeug.security import generate_password_hash
-
-from model import Base, User, Role, Permission
-from schema import (
+from src.database import Base
+from src.model.user import User
+from src.model.role import Role
+from src.model.permission import Permission
+from src.enum.permissionAction import EnumPermissionAction
+from src.schema import (
     DTOUserCreate, DTOUserUpdate, DTOUserResponse,
     DTORoleCreate, DTORoleUpdate, DTORoleResponse,
-    DTOPermissionCreate, DTOPermissionUpdate, DTOPermissionResponse,
-    EnumPermissionAction, Validation
+    DTOPermissionCreate, DTOPermissionUpdate, DTOPermissionResponse
 )
 
 # Type variables for generic service
@@ -57,15 +59,7 @@ class ServiceValidationError(ServiceException):
         self.errors = errors or {}
 
 class BaseService(Generic[TModel, TCreateSchema, TUpdateSchema, TResponseSchema]):
-    """Classe base genérica para operações CRUD.
-
-    Suporta auditoria, soft delete e paginação para qualquer modelo SQLAlchemy
-    com DTOs Pydantic correspondentes.
-
-    Attributes:
-        model: Classe do modelo SQLAlchemy.
-        db: Sessão do banco de dados SQLAlchemy.
-    """
+    """Classe base genérica para operações CRUD."""
 
     def __init__(self, model: Type[TModel], db: Session):
         self.model = model
@@ -76,22 +70,14 @@ class BaseService(Generic[TModel, TCreateSchema, TUpdateSchema, TResponseSchema]
         """Gerenciador de contexto para transações de banco de dados."""
         try:
             yield self.db
-            self.db.commit()
         except Exception as e:
             self.db.rollback()
             raise
+        else:
+            self.db.commit()
 
     def _apply_audit_fields(self, instance: TModel, current_user_id: Optional[UUID] = None) -> TModel:
-        """
-        Aplica campos de auditoria ao modelo.
-
-        Args:
-            instance: Instância do modelo.
-            current_user_id: UUID do usuário que realiza a operação (para auditoria).
-
-        Returns:
-            Instância do modelo com campos de auditoria atualizados.
-        """
+        """Aplica campos de auditoria ao modelo."""
         if hasattr(instance, 'created_by') and not instance.created_by:
             instance.created_by = current_user_id
         if hasattr(instance, 'updated_by'):
@@ -99,34 +85,14 @@ class BaseService(Generic[TModel, TCreateSchema, TUpdateSchema, TResponseSchema]
         return instance
 
     def _to_response_dto(self, instance: TModel) -> TResponseSchema:
-        """
-        Converte uma instância do modelo em um DTO de resposta.
-
-        Args:
-            instance: Instância do modelo.
-
-        Returns:
-            DTO de resposta correspondente.
-        """
+        """Converte uma instância do modelo em um DTO de resposta."""
         try:
             return TResponseSchema.model_validate(instance, from_attributes=True)
-        except ServiceValidationError as e:
+        except ValidationError as e:
             raise RuntimeError(f"Erro ao converter para DTO: {e}")
 
     def get(self, id: UUID, include_deleted: bool = False) -> TResponseSchema:
-        """
-        Recupera um recurso pelo ID.
-
-        Args:
-            id: UUID do recurso.
-            include_deleted: Se True, inclui recursos deletados logicamente.
-
-        Returns:
-            DTO de resposta correspondente ao recurso.
-
-        Raises:
-            NotFoundError: Se o recurso não for encontrado.
-        """
+        """Recupera um recurso pelo ID."""
         query = self.db.query(self.model).filter(self.model.id == id)
         if not include_deleted and hasattr(self.model, 'deleted_at'):
             query = query.filter(self.model.deleted_at.is_(None))
@@ -136,20 +102,7 @@ class BaseService(Generic[TModel, TCreateSchema, TUpdateSchema, TResponseSchema]
         return self._to_response_dto(instance)
 
     def list(self, last_id: Optional[UUID] = None, limit: int = 100, include_deleted: bool = False) -> List[TResponseSchema]:
-        """
-        Lista recursos com paginação baseada em cursor.
-
-        Args:
-            last_id: UUID do último recurso para paginação (opcional).
-            limit: Número máximo de registros a retornar.
-            include_deleted: Se True, inclui recursos deletados logicamente.
-
-        Returns:
-            Lista de DTOs de resposta.
-
-        Note:
-            Recomenda-se criar um índice em `id` para otimizar a paginação.
-        """
+        """Lista recursos com paginação baseada em cursor."""
         query = self.db.query(self.model)
         if last_id:
             query = query.filter(self.model.id > last_id)
@@ -159,20 +112,7 @@ class BaseService(Generic[TModel, TCreateSchema, TUpdateSchema, TResponseSchema]
         return [self._to_response_dto(instance) for instance in instances]
 
     def create(self, create_dto: TCreateSchema, current_user_id: Optional[UUID] = None) -> TResponseSchema:
-        """
-        Cria um novo recurso.
-
-        Args:
-            create_dto: DTO com dados para criação.
-            current_user_id: UUID do usuário que realiza a operação (para auditoria).
-
-        Returns:
-            DTO de resposta do recurso criado.
-
-        Raises:
-            IntegrityError: Se houver violação de integridade no banco.
-            ServiceException: Se ocorrer um erro inesperado.
-        """
+        """Cria um novo recurso."""
         try:
             create_dto.model_validate(create_dto, strict=True)
         except ServiceValidationError as e:
@@ -194,7 +134,7 @@ class BaseService(Generic[TModel, TCreateSchema, TUpdateSchema, TResponseSchema]
                 logger.info(f"Criando {self.model.__name__} com dados: {create_dto}")
                 self.db.refresh(instance)
                 return self._to_response_dto(instance)
-        except ServiceIntegrityError as e:
+        except IE as e:
             logger.error(f"Erro de integridade ao criar {self.model.__name__}: {str(e)}")
             raise ServiceIntegrityError(f"Erro ao criar {self.model.__name__}: {str(e)}")
         except Exception as e:
@@ -202,22 +142,7 @@ class BaseService(Generic[TModel, TCreateSchema, TUpdateSchema, TResponseSchema]
             raise ServiceException(f"Erro inesperado ao criar {self.model.__name__}")
 
     def update(self, id: UUID, update_dto: TUpdateSchema, current_user_id: Optional[UUID] = None) -> TResponseSchema:
-        """
-        Atualiza um recurso existente.
-
-        Args:
-            id: UUID do recurso.
-            update_dto: DTO com dados para atualização.
-            current_user_id: UUID do usuário que realiza a operação (para auditoria).
-
-        Returns:
-            DTO de resposta do recurso atualizado.
-
-        Raises:
-            NotFoundError: Se o recurso não for encontrado.
-            IntegrityError: Se houver violação de integridade no banco.
-            ServiceException: Se ocorrer um erro inesperado.
-        """
+        """Atualiza um recurso existente."""
         instance = self.db.query(self.model).filter(self.model.id == id).first()
         if not instance:
             raise NotFoundError(resource_name=self.model.__name__, resource_id=id)
@@ -286,19 +211,7 @@ class UserService(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRespons
         super().__init__(User, db)
 
     def get_by_email(self, email: str, include_deleted: bool = False) -> DTOUserResponse:
-        """
-        Recupera um usuário pelo email.
-
-        Args:
-            email: Email do usuário.
-            include_deleted: Se True, inclui usuários deletados logicamente.
-
-        Returns:
-            DTOUserResponse com os dados do usuário.
-
-        Raises:
-            NotFoundError: Se o usuário não for encontrado.
-        """
+        """Recupera um usuário pelo email."""
         query = self.db.query(self.model).filter(self.model.email == email)
         if not include_deleted:
             query = query.filter(self.model.deleted_at.is_(None))
@@ -308,19 +221,7 @@ class UserService(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRespons
         return self._to_response_dto(instance)
 
     def get_by_username(self, username: str, include_deleted: bool = False) -> DTOUserResponse:
-        """
-        Recupera um usuário pelo nome de usuário.
-
-        Args:
-            username: Nome de usuário.
-            include_deleted: Se True, inclui usuários deletados logicamente.
-
-        Returns:
-            DTOUserResponse com os dados do usuário.
-
-        Raises:
-            NotFoundError: Se o usuário não for encontrado.
-        """
+        """Recupera um usuário pelo nome de usuário."""
         query = self.db.query(self.model).filter(self.model.username == username)
         if not include_deleted:
             query = query.filter(self.model.deleted_at.is_(None))
@@ -330,22 +231,7 @@ class UserService(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRespons
         return self._to_response_dto(instance)
 
     def update_roles(self, user_id: UUID, role_ids: List[UUID], current_user_id: Optional[UUID] = None) -> DTOUserResponse:
-        """
-        Atualiza os papéis associados a um usuário.
-
-        Args:
-            user_id: UUID do usuário.
-            role_ids: Lista de UUIDs dos papéis a serem associados.
-            current_user_id: UUID do usuário que realiza a operação (para auditoria).
-
-        Returns:
-            DTOUserResponse com os dados atualizados do usuário.
-
-        Raises:
-            ValidationError: Se o número de papéis exceder o limite ou houver duplicatas.
-            NotFoundError: Se o usuário ou algum papel não for encontrado.
-            ServiceException: Se ocorrer um erro ao atualizar os papéis.
-        """
+        """Atualiza os papéis associados a um usuário."""
         if len(role_ids) > Validation.MAX_ROLES_PER_USER:
             raise ServiceValidationError(
                 message=f"Um usuário não pode ter mais de {Validation.MAX_ROLES_PER_USER} papéis",
@@ -385,23 +271,10 @@ class UserService(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRespons
             raise ServiceException(f"Erro ao atualizar papéis do usuário: {str(e)}")
 
     def set_password(self, user_id: UUID, password: str, current_user_id: Optional[UUID] = None) -> bool:
-        """
-        Define a senha de um usuário (hash da senha).
-
-        Args:
-            user_id: UUID do usuário.
-            password: Senha em texto plano a ser hasheada.
-            current_user_id: UUID do usuário que realiza a operação (para auditoria).
-
-        Returns:
-            True se a senha for definida com sucesso.
-
-        Raises:
-            NotFoundError: Se o usuário não for encontrado.
-            ServiceException: Se ocorrer um erro ao definir a senha.
-        """
-        if len(password) < 8:
-            raise ServiceValidationError("A senha deve ter pelo menos 8 caracteres")
+        """Define a senha de um usuário (hash da senha)."""
+        PASSWORD_MIN_LENGTH = 8
+        if len(password) < PASSWORD_MIN_LENGTH:
+            raise ServiceValidationError(f"A senha deve ter pelo menos {PASSWORD_MIN_LENGTH} caracteres")
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user:
             raise NotFoundError(resource_name="User", resource_id=user_id)
@@ -422,18 +295,7 @@ class RoleService(BaseService[Role, DTORoleCreate, DTORoleUpdate, DTORoleRespons
         super().__init__(Role, db)
 
     def get_default_roles(self, include_deleted: bool = False) -> List[DTORoleResponse]:
-        """
-        Recupera todos os papéis padrão.
-
-        Args:
-            include_deleted: Se True, inclui papéis deletados logicamente.
-
-        Returns:
-            Lista de DTOs de resposta com os papéis padrão.
-
-        Note:
-            Recomenda-se criar um índice em `is_default` para otimizar esta query.
-        """
+        """Recupera todos os papéis padrão."""
         query = self.db.query(self.model).filter(self.model.is_default == True)
         if not include_deleted:
             query = query.filter(self.model.deleted_at.is_(None))
@@ -441,22 +303,7 @@ class RoleService(BaseService[Role, DTORoleCreate, DTORoleUpdate, DTORoleRespons
         return [self._to_response_dto(instance) for instance in instances]
 
     def update_permissions(self, role_id: UUID, permission_ids: List[UUID], current_user_id: Optional[UUID] = None) -> DTORoleResponse:
-        """
-        Atualiza as permissões associadas a um papel.
-
-        Args:
-            role_id: UUID do papel.
-            permission_ids: Lista de UUIDs das permissões a serem associadas.
-            current_user_id: UUID do usuário que realiza a operação (para auditoria).
-
-        Returns:
-            DTORoleResponse com os dados atualizados do papel.
-
-        Raises:
-            ValidationError: Se o número de permissões exceder o limite ou houver duplicatas.
-            NotFoundError: Se o papel ou alguma permissão não for encontrada.
-            ServiceException: Se ocorrer um erro ao atualizar as permissões.
-        """
+        """Atualiza as permissões associadas a um papel."""
         if len(permission_ids) > Validation.MAX_PERMISSIONS_PER_ROLE:
             raise ServiceValidationError(
                 message=f"Um papel não pode ter mais de {Validation.MAX_PERMISSIONS_PER_ROLE} permissões",
@@ -495,24 +342,8 @@ class PermissionService(BaseService[Permission, DTOPermissionCreate, DTOPermissi
     def __init__(self, db: Session):
         super().__init__(Permission, db)
 
-    def get_by_action(self, action: str, include_deleted: bool = False) -> List[DTOPermissionResponse]:
-        """
-        Recupera permissões pelo tipo de ação.
-
-        Args:
-            action: Tipo de ação (e.g., 'create', 'read').
-            include_deleted: Se True, inclui permissões deletadas logicamente.
-
-        Returns:
-            Lista de DTOs de resposta com as permissões encontradas.
-
-        Raises:
-            ValidationError: Se a ação fornecida for inválida.
-            NotFoundError: Se nenhuma permissão for encontrada.
-
-        Note:
-            Recomenda-se criar um índice em `action` para otimizar esta query.
-        """
+    def get_by_actions(self, action: str, include_deleted: bool = False) -> List[DTOPermissionResponse]:
+        """Recupera permissões pelo tipo de ação."""
         if action not in [e.value for e in EnumPermissionAction]:
             raise ServiceValidationError(f"Ação inválida: {action}", errors={"action": "Ação não existe"})
         query = self.db.query(self.model).filter(self.model.action == action)
