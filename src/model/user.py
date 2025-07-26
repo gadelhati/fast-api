@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy import String, Boolean, DateTime, Integer
 from datetime import datetime
 from src.database import Base
-from model.mixin import MixinAudit, MixinSoftDelete
+from model.basic import MixinAudit, MixinSoftDelete
 from src.model.association import user_roles
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

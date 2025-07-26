@@ -2,7 +2,7 @@ from typing import List, Optional
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy import String, Enum
 from src.database import Base
-from src.model.mixin import MixinAudit, MixinSoftDelete
+from model.basic import MixinAudit, MixinSoftDelete
 from src.enum.permissionAction import EnumPermissionAction
 from src.model.association import role_permissions
 from typing import TYPE_CHECKING
