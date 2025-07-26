@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncAttrs
 
 from src.config import DATABASE_URL
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True, echo=True)
+engine = create_engine(DATABASE_URL, pool_pre_ping=True, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base(cls=AsyncAttrs)
 
