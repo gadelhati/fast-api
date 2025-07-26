@@ -2,14 +2,14 @@ from typing import List, Optional
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy import String, Boolean
 from src.database import Base
-from src.model.base import AuditMixin, SoftDeleteMixin
+from model.mixin import MixinAudit, MixinSoftDelete
 from src.model.association import user_roles, role_permissions
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from src.model.user import User
 	from src.model.permission import Permission
 
-class Role(Base, AuditMixin, SoftDeleteMixin):
+class Role(Base, MixinAudit, MixinSoftDelete):
 	"""Role Model"""
 	__tablename__ = "roles"
 	

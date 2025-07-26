@@ -10,7 +10,7 @@ class Base(DeclarativeBase):
 
 	pass
 
-class AuditMixin:
+class MixinAudit:
 	"""Mixin for audit"""
 	
 	id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -25,7 +25,7 @@ class AuditMixin:
         "version_id_generator": True
     }
 
-class SoftDeleteMixin:
+class MixinSoftDelete:
 	"""Mixin for soft delete"""
 	
 	deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)

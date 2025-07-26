@@ -2,14 +2,14 @@ from typing import List, Optional
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy import String, Enum
 from src.database import Base
-from src.model.base import AuditMixin, SoftDeleteMixin
+from src.model.mixin import MixinAudit, MixinSoftDelete
 from src.enum.permissionAction import EnumPermissionAction
 from src.model.association import role_permissions
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
 	from src.model.role import Role
 
-class Permission(Base, AuditMixin, SoftDeleteMixin):
+class Permission(Base, MixinAudit, MixinSoftDelete):
 	"""Permission model"""
 	__tablename__ = "permissions"
 	
