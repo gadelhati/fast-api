@@ -3,7 +3,6 @@ from typing import Optional
 from uuid import UUID
 from datetime import datetime
 from src.enum.permissionAction import EnumPermissionAction
-from src.schema.base import BaseModel
 
 # Base configuration for all models
 class BaseConfig:
