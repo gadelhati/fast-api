@@ -1,20 +1,8 @@
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 from uuid import UUID
-from datetime import datetime
 from src.enum.permissionAction import EnumPermissionAction
-
-# Base configuration for all models
-class BaseConfig:
-    model_config = ConfigDict(
-        from_attributes=True,
-        json_encoders={
-            UUID: str,
-            datetime: lambda v: v.isoformat() if v else None
-        },
-        str_strip_whitespace=True,
-        validate_assignment=True
-    )
+from schema.basic import BaseConfig
 
 class DTOUserBasic(BaseModel):
     """Base DTO for user (used in listings and relationships)"""

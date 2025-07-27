@@ -1,8 +1,9 @@
 from pydantic import BaseModel, field_validator, Field
 from typing import Optional, List
 from uuid import UUID
-from src.schema.base import BaseConfig, DTOAuditMixin, DTOSoftDeleteMixin
-from src.schema.base_basic import DTOUserBasic, DTOPermissionBasic
+from schema.basic import BaseConfig, DTOMixinAudit, DTOSoftDeleteMixin, DTOPagination
+from schema.permission import DTOPermissionRetrieve
+# from schema.user import DTOUserRetrieve
 from src.validation.validations import Validation
 
 class DTORoleCreate(BaseModel):
@@ -68,13 +69,18 @@ class DTORoleUpdate(BaseModel):
 
     model_config = BaseConfig.model_config
 
-class DTORoleResponse(DTOAuditMixin, DTOSoftDeleteMixin):
+class DTORoleRetrieve(DTOMixinAudit, DTOSoftDeleteMixin):
     """DTO for role response"""
     name: str
     description: Optional[str] = None
     is_default: bool
-    permissions: List['DTOPermissionBasic'] = Field(default_factory=list)
-    users: List['DTOUserBasic'] = Field(default_factory=list)
+    permissions: List['DTOPermissionRetrieve'] = Field(default_factory=list)
+    # user_ids: List['DTOUserRetrieve'] = Field(default_factory=list)
+
+class DTORoleRetrieveAll(DTOPagination):
+    """DTO for role list response with pagination"""
+    items: List['DTORoleRetrieve']
 
 # Rebuild models to resolve forward references in circular relationships
-DTORoleResponse.model_rebuild()
+DTORoleRetrieve.model_rebuild()
+DTORoleRetrieveAll.model_rebuild()

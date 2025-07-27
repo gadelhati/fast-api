@@ -1,9 +1,21 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List, Generic, TypeVar
 from uuid import UUID
 from datetime import datetime
-from schema.association import DTOUserBasic, DTORoleBasic, DTOPermissionBasic, BaseConfig
+from schema.association import DTOUserBasic, DTORoleBasic, DTOPermissionBasic
 
+# Base configuration for all models
+class BaseConfig:
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_encoders={
+            UUID: str,
+            datetime: lambda v: v.isoformat() if v else None
+        },
+        str_strip_whitespace=True,
+        validate_assignment=True
+    )
+    
 class DTOMixinAudit(BaseModel):
     """Mixin for complete audit fields in DTOs"""
     id: UUID
@@ -27,7 +39,7 @@ class DTOSoftDeleteMixin(BaseModel):
     
     model_config = BaseConfig.model_config
 
-class DTOPaginationResponse(BaseModel):
+class DTOPagination(BaseModel):
     """DTO for paginated response"""
     total: int = Field(description="Total number of items")
     page: int = Field(default=1, ge=1, description="Current page")
@@ -37,18 +49,6 @@ class DTOPaginationResponse(BaseModel):
     has_prev: bool = Field(description="Whether there is a previous page")
     
     model_config = BaseConfig.model_config
-
-class DTOUserListResponse(DTOPaginationResponse):
-    """DTO for user list response with pagination"""
-    items: List[DTOUserBasic]
-
-class DTORoleListResponse(DTOPaginationResponse):
-    """DTO for role list response with pagination"""
-    items: List[DTORoleBasic]
-
-class DTOPermissionListResponse(DTOPaginationResponse):
-    """DTO for permission list response with pagination"""
-    items: List[DTOPermissionBasic]
 
 class DTOValidationError(BaseModel):
     """DTO for validation error details"""

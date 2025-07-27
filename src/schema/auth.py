@@ -1,8 +1,8 @@
 from pydantic import BaseModel, EmailStr, field_validator, Field
 from typing import List
-from src.schema.base import BaseConfig
-from src.schema.base_basic import DTOUserBasic
-from src.schema.base_basic import DTORoleBasic
+from schema.basic import BaseConfig
+from schema.association import DTOUserBasic
+from schema.association import DTORoleBasic
 from src.validation.validations import Validation
 
 class DTOLogin(BaseModel):

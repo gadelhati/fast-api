@@ -2,8 +2,8 @@ from pydantic import BaseModel, field_validator, Field
 from typing import Optional, List
 from uuid import UUID
 from src.enum.permissionAction import EnumPermissionAction
-from src.schema.base import BaseConfig, DTOAuditMixin, DTOSoftDeleteMixin
-from src.schema.base_basic import DTORoleBasic
+from schema.basic import BaseConfig, DTOMixinAudit, DTOSoftDeleteMixin, DTOPagination
+from schema.role import DTORoleRetrieve
 from src.validation.validations import Validation
 
 class DTOPermissionCreate(BaseModel):
@@ -45,12 +45,18 @@ class DTOPermissionUpdate(BaseModel):
 
     model_config = BaseConfig.model_config
 
-class DTOPermissionResponse(DTOAuditMixin, DTOSoftDeleteMixin):
+class DTOPermissionRetrieve(DTOMixinAudit, DTOSoftDeleteMixin):
     """DTO for permission response"""
+    id: UUID
     name: str
     description: Optional[str] = None
     action: EnumPermissionAction
-    roles: List[DTORoleBasic] = Field(default_factory=list)
+    # roles: List['DTORoleRetrieve'] = Field(default_factory=list)
+
+class DTOPermissionRetrieveAll(DTOPagination):
+    """DTO for permission list response with pagination"""
+    items: List[DTOPermissionRetrieve]
 
 # Rebuild models to resolve forward references in circular relationships
-DTOPermissionResponse.model_rebuild()
+DTOPermissionRetrieve.model_rebuild()
+DTOPermissionRetrieveAll.model_rebuild()
