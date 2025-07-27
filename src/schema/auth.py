@@ -1,8 +1,8 @@
 from pydantic import BaseModel, EmailStr, field_validator, Field
 from typing import List
 from schema.basic import BaseConfig
-from schema.association import DTOUserBasic
-from schema.association import DTORoleBasic
+from schema.user import DTOUserRetrieve
+from schema.role import DTORoleRetrieve
 from src.validation.validations import Validation
 
 class DTOLogin(BaseModel):
@@ -26,8 +26,8 @@ class DTOToken(BaseModel):
     token_type: str = "bearer"
     refreshToken: str
     expires_in: int
-    user: DTOUserBasic
-    roles: List[DTORoleBasic] = Field(default_factory=list)
+    user: DTOUserRetrieve
+    roles: List[DTORoleRetrieve] = Field(default_factory=list)
 
     model_config = BaseConfig.model_config
 

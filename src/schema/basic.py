@@ -2,7 +2,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List, Generic, TypeVar
 from uuid import UUID
 from datetime import datetime
-from schema.association import DTOUserBasic, DTORoleBasic, DTOPermissionBasic
 
 # Base configuration for all models
 class BaseConfig:
