@@ -1,20 +1,18 @@
-# services/role_service.py
 from uuid import UUID
 from sqlalchemy.orm import Session
 from typing import Optional, List
-
 from src.model.role import Role
-from src.schema import DTORoleCreate, DTORoleUpdate, DTORoleResponse
+from src.schema import DTORoleCreate, DTORoleUpdate, DTORoleRetrieve
 from src.service.base import BaseService, ValidationError
 from src.service.service import NotFoundError, ServiceException
 
-class RoleService(BaseService[Role, DTORoleCreate, DTORoleUpdate, DTORoleResponse]):
+class RoleService(BaseService[Role, DTORoleCreate, DTORoleUpdate, DTORoleRetrieve]):
     """Role service with additional role-specific methods"""
     
     def __init__(self, db: Session):
         super().__init__(Role, db)
     
-    def get_default_roles(self, include_deleted: bool = False) -> List[DTORoleResponse]:
+    def get_default_roles(self, include_deleted: bool = False) -> List[DTORoleRetrieve]:
         """Get all default roles"""
         query = self.db.query(self.model).filter(self.model.is_default == True)
         
@@ -29,7 +27,7 @@ class RoleService(BaseService[Role, DTORoleCreate, DTORoleUpdate, DTORoleRespons
         role_id: UUID, 
         permission_ids: List[UUID], 
         current_user_id: Optional[UUID] = None
-    ) -> DTORoleResponse:
+    ) -> DTORoleRetrieve:
         """Update role permissions"""
         from src.model import Permission
         from src.schema import Validation

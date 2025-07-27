@@ -4,19 +4,19 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 
 from src.model.user import User
-from src.schema.user import DTOUserCreate, DTOUserUpdate, DTOUserResponse
+from src.schema.user import DTOUserCreate, DTOUserUpdate, DTOUserRetrieve
 from src.service.base import BaseService
-from src.schema import (DTOUserCreate, DTOUserUpdate, DTOUserResponse)
+from src.schema import (DTOUserCreate, DTOUserUpdate, DTOUserRetrieve)
 from pydantic import ValidationError
 from src.service.service import NotFoundError, ServiceException
 
-class UserService(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserResponse]):
+class UserService(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRetrieve]):
     """User service with additional user-specific methods"""
     
     def __init__(self, db: Session):
         super().__init__(User, db)
     
-    def get_by_email(self, email: str, include_deleted: bool = False) -> Optional[DTOUserResponse]:
+    def get_by_email(self, email: str, include_deleted: bool = False) -> Optional[DTOUserRetrieve]:
         """Get user by email"""
         query = self.db.query(self.model).filter(self.model.email == email)
         
@@ -26,7 +26,7 @@ class UserService(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRespons
         instance = query.first()
         return self._to_response_dto(instance) if instance else None
     
-    def get_by_username(self, username: str, include_deleted: bool = False) -> Optional[DTOUserResponse]:
+    def get_by_username(self, username: str, include_deleted: bool = False) -> Optional[DTOUserRetrieve]:
         """Get user by username"""
         query = self.db.query(self.model).filter(self.model.username == username)
         
@@ -36,7 +36,7 @@ class UserService(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRespons
         instance = query.first()
         return self._to_response_dto(instance) if instance else None
     
-    def update_roles(self, user_id: UUID, role_ids: List[UUID], current_user_id: Optional[UUID] = None) -> DTOUserResponse:
+    def update_roles(self, user_id: UUID, role_ids: List[UUID], current_user_id: Optional[UUID] = None) -> DTOUserRetrieve:
         """Update user roles"""
         from src.model import Role
         from src.schema import Validation

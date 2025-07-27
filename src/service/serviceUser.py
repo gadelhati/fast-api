@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from src.model.user import User
 from src.schema.auth import DTOToken
-from src.schema.base_basic import DTOUserBasic
-from src.schema.user import DTOUserCreate, DTOUserUpdate, DTOUserResponse
+from src.schema.user import DTOUserRetrieve
+from src.schema.user import DTOUserCreate, DTOUserUpdate, DTOUserRetrieve
 from sqlalchemy.dialects.postgresql import UUID
 from passlib.hash import pbkdf2_sha256
 from jose import jwt
@@ -25,7 +25,7 @@ class ServiceUser:
     def get_by_email(db: Session, email: str) -> Optional[User]:
         return db.query(User).filter(User.email == email).first()
 
-    def login(db: Session, created: DTOUserBasic) -> User:
+    def login(db: Session, created: DTOUserRetrieve) -> User:
         _object_username = ServiceUser.get_by_username(db, created.username)
         _match = pbkdf2_sha256.verify(created.password, _object_username.password)
         if not _object_username or not _match:
@@ -43,7 +43,7 @@ class ServiceUser:
         db.refresh(_object)
         return _object
     
-    def cancel(db: Session, cancelled: DTOUserBasic) -> User:
+    def cancel(db: Session, cancelled: DTOUserRetrieve) -> User:
         _object = ServiceUser.get_by_id(db, cancelled.id)
         if _object:
             db.delete(_object)

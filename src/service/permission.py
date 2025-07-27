@@ -1,19 +1,16 @@
-# services/permission_service.py
-from uuid import UUID
 from sqlalchemy.orm import Session
-from typing import Optional, List
-
+from typing import List
 from src.model.permission import Permission
-from src.schema.permission import DTOPermissionCreate, DTOPermissionUpdate, DTOPermissionResponse
+from src.schema.permission import DTOPermissionCreate, DTOPermissionUpdate, DTOPermissionRetrieve
 from src.service.base import BaseService
 
-class PermissionService(BaseService[Permission, DTOPermissionCreate, DTOPermissionUpdate, DTOPermissionResponse]):
+class PermissionService(BaseService[Permission, DTOPermissionCreate, DTOPermissionUpdate, DTOPermissionRetrieve]):
     """Permission service with additional permission-specific methods"""
     
     def __init__(self, db: Session):
         super().__init__(Permission, db)
     
-    def get_by_action(self, action: str, include_deleted: bool = False) -> List[DTOPermissionResponse]:
+    def get_by_action(self, action: str, include_deleted: bool = False) -> List[DTOPermissionRetrieve]:
         """Get permissions by action"""
         query = self.db.query(self.model).filter(self.model.action == action)
         
