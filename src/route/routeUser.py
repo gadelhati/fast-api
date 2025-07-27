@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from src.database import get_db
 from sqlalchemy.orm import Session
-from src.schema.base import Response
-from src.schema.user import DTOUserCreate, DTOUserUpdate, DTOUserResponse
+from schema.basic import Response
+from src.schema.user import DTOUserCreate, DTOUserUpdate, DTOUserRetrieve
 from src.service.serviceUser import ServiceUser
 from uuid import UUID
 
@@ -34,9 +34,9 @@ async def create(request: DTOUserCreate, db: Session=Depends(get_db), current_us
         raise HTTPException(status_code=500, detail=str(e))
     
 @user.patch("/", status_code=202)
-async def cancel(request: DTOUserResponse, db: Session=Depends(get_db)):
+async def cancel(request: DTOUserRetrieve, db: Session=Depends(get_db)):
     try:
-        _result = DTOUserResponse.cancel(db, cancelled=request)
+        _result = DTOUserRetrieve.cancel(db, cancelled=request)
         return Response(code=202, status="Accepted", message="Cancelled", result=_result).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

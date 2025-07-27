@@ -1,4 +1,4 @@
 from .base import BaseService, ServiceException, NotFoundError, IntegrityError, ValidationError
-from .user import UserService
-from .role import RoleService
+from .user import ServiceUser
+from .role import ServiceRole
 from .permission import PermissionService
