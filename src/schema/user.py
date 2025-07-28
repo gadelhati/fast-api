@@ -2,9 +2,13 @@ from pydantic import BaseModel, EmailStr, field_validator, Field
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
-from src.schema.basic import BaseConfig, DTOMixinAudit, DTOSoftDeleteMixin, DTOPagination
-from src.schema.role import DTORoleRetrieve
 from src.validation.validations import Validation
+from src.schema.basic import BaseConfig, DTOMixinAudit, DTOSoftDeleteMixin, DTOPagination
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.schema.role import DTORoleRetrieve
+DTORoleRetrieve = None
 
 class DTOUserCreate(BaseModel):
     """DTO for creating a user"""

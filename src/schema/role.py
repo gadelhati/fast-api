@@ -1,10 +1,13 @@
 from pydantic import BaseModel, field_validator, Field
 from typing import Optional, List
 from uuid import UUID
-from schema.basic import BaseConfig, DTOMixinAudit, DTOSoftDeleteMixin, DTOPagination
-from schema.permission import DTOPermissionRetrieve
-# from schema.user import DTOUserRetrieve
 from src.validation.validations import Validation
+from src.schema.basic import BaseConfig, DTOMixinAudit, DTOSoftDeleteMixin, DTOPagination
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.schema.permission import DTOPermissionRetrieve
+DTOPermissionRetrieve = None
 
 class DTORoleCreate(BaseModel):
     """DTO for creating a role"""
