@@ -34,5 +34,5 @@ app.add_middleware(
 async def home():
     return {"message": "Welcome Home", "status": "success"}
 
-# app.include_router(user, prefix="/user", tags=["user"])
+app.include_router(user, prefix="/user", tags=["user"])
 app.include_router(admin_router)
