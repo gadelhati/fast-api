@@ -9,7 +9,7 @@ from src.schema.user import DTOUserCreate, DTOUserUpdate, DTOUserRetrieve
 from src.service.base import BaseService
 from src.schema import (DTOUserCreate, DTOUserUpdate, DTOUserRetrieve)
 from pydantic import ValidationError
-from service.basic import NotFoundError, ServiceException, ServiceValidationError, ServiceIntegrityError
+from src.service.basic import NotFoundError, ServiceException, ServiceValidationError, ServiceIntegrityError
 from src.validation.validations import Validation
 from sqlalchemy.exc import IntegrityError as IE
 import logging

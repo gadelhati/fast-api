@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from src.database import get_db
 from sqlalchemy.orm import Session
-from schema.basic import Response
+from src.schema.basic import Response
 from src.schema.user import DTOUserCreate, DTOUserUpdate, DTOUserRetrieve
 from src.service.serviceUser import ServiceUser
 from uuid import UUID

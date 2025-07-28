@@ -2,7 +2,7 @@ from typing import List, Optional
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy import String, Boolean
 from src.database import Base
-from model.basic import MixinAudit, MixinSoftDelete
+from src.model.basic import MixinAudit, MixinSoftDelete
 from src.model.association import user_roles, role_permissions
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
