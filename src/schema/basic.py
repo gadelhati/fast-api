@@ -49,29 +49,25 @@ class DTOPagination(BaseModel):
     
     model_config = BaseConfig.model_config
 
-class DTOValidationError(BaseModel):
+class ValidationError(BaseModel):
     """DTO for validation error details"""
     field: str
+    rejectedValue: str
     message: str
     
     model_config = BaseConfig.model_config
 
-class DTOErrorResponse(BaseModel):
+class ResponseError(BaseModel):
     """DTO for error response"""
-    error: str
+    code: int
+    status: str
     message: str
-    details: Optional[List[DTOValidationError]] = None
+    path: Optional[str]
+    timestamp: Optional[datetime]
+    validationErrors: Optional[List[ValidationError]] = None
     
     model_config = BaseConfig.model_config
 
 class SchemaSwagger(BaseModel):
     username: str = Field(..., unique=True, nullable=False)
     password: str = Field(..., min_length=7, max_length=255, nullable=False)
-
-T = TypeVar('T')
-	
-class Response(BaseModel, Generic[T]):
-    code: int
-    status: str
-    message: str
-    result: Optional[T] = None

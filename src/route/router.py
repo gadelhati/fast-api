@@ -5,13 +5,12 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 
 from src.database import get_db
-from src.schema.basic import Response
+from src.schema.basic import ResponseError
 from src.service.user import ServiceUser
 
-# ✅ Router separado para funcionalidades administrativas
 admin_router = APIRouter(prefix="/admin/users", tags=["admin-users"])
 
-@admin_router.get("/{user_id}/security-status", status_code=status.HTTP_200_OK, response_model=Response)
+@admin_router.get("/{user_id}/security-status", status_code=status.HTTP_200_OK, response_model=ResponseError)
 async def get_user_security_status(
     user_id: UUID,
     db: Session = Depends(get_db),
@@ -23,14 +22,14 @@ async def get_user_security_status(
     """
     service = ServiceUser(db)
     result = service.get_security_status(user_id)
-    return Response(
+    return ResponseError(
         code=200,
         status="Ok",
         message="Status de segurança obtido",
-        result=result
+        validationErrors=result
     ).dict(exclude_none=True)
 
-@admin_router.post("/{user_id}/unlock", status_code=status.HTTP_200_OK, response_model=Response)
+@admin_router.post("/{user_id}/unlock", status_code=status.HTTP_200_OK, response_model=ResponseError)
 async def unlock_user_account(
     user_id: UUID,
     db: Session = Depends(get_db),
@@ -44,11 +43,11 @@ async def unlock_user_account(
     current_user_id = getattr(current_user, 'id', None) if current_user else None
     
     result = service.unlock_account(user_id, current_user_id)
-    return Response(
+    return ResponseError(
         code=200,
         status="Ok",
         message="Conta desbloqueada com sucesso",
-        result={"unlocked": result}
+        validationErrors={"unlocked": result}
     ).dict(exclude_none=True)
 
 # ✅ Endpoint para autenticação (usado pelo sistema de auth, não API pública)
