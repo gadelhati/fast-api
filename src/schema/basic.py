@@ -62,8 +62,8 @@ class ResponseError(BaseModel):
     code: int
     status: str
     message: str
-    path: Optional[str]
-    timestamp: Optional[datetime]
+    # path: Optional[str]
+    # timestamp: Optional[datetime]
     validationErrors: Optional[List[ValidationError]] = None
     
     model_config = BaseConfig.model_config

@@ -17,14 +17,12 @@ origins = [
     "http://127.0.0.1:5173",
     "http://127.0.0.1",
     "http://localhost:5173",
-    "http://localhost",
-    "https://example.com"
+    "http://localhost"
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=origins,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["POST"],
     allow_headers=["*"],
@@ -32,7 +30,7 @@ app.add_middleware(
 
 @app.get("/")
 async def home():
-    return {"message": "Welcome Home", "status": "success"}
+    return {"message": "Welcome Fast API by Gadelha TI", "status": "success"}
 
 app.include_router(user, prefix="/user", tags=["user"])
 app.include_router(admin_router)
