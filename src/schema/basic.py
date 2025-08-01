@@ -3,8 +3,8 @@ from typing import Optional, List, Generic, TypeVar
 from uuid import UUID
 from datetime import datetime
 
-# Base configuration for all models
 class BaseConfig:
+    """Base configuration for all models"""
     model_config = ConfigDict(
         from_attributes=True,
         json_encoders={
@@ -69,5 +69,5 @@ class ResponseError(BaseModel):
     model_config = BaseConfig.model_config
 
 class SchemaSwagger(BaseModel):
-    username: str = Field(..., unique=True, nullable=False)
+    username: str = Field(..., min_length=3, max_length=255, nullable=False)
     password: str = Field(..., min_length=7, max_length=255, nullable=False)
