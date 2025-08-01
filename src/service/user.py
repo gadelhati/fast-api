@@ -6,17 +6,16 @@ from passlib.context import CryptContext
 from src.model.user import User
 from src.model.role import Role
 from src.schema.user import DTOUserCreate, DTOUserUpdate, DTOUserRetrieve
-from src.service.base import BaseService
 from src.schema import (DTOUserCreate, DTOUserUpdate, DTOUserRetrieve)
 from pydantic import ValidationError
-from src.service.basic import NotFoundError, ServiceException, ServiceValidationError, ServiceIntegrityError
+from src.service.basic import ServiceBase, ServiceException
 from src.validation.validations import Validation
 from sqlalchemy.exc import IntegrityError as IE
 import logging
 
 logger = logging.getLogger(__name__)
 
-class ServiceUser(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRetrieve]):
+class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetrieve]):
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     """User service with additional user-specific methods"""
     
@@ -108,7 +107,7 @@ class ServiceUser(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
         """
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user:
-            raise NotFoundError(resource_name="User", resource_id=user_id)
+            raise ServiceException(resource_name="User", resource_id=user_id)
         
         try:
             with self.transaction():
@@ -130,7 +129,7 @@ class ServiceUser(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
         """
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user:
-            raise NotFoundError(resource_name="User", resource_id=user_id)
+            raise ServiceException(resource_name="User", resource_id=user_id)
         
         return {
             "is_locked": self._is_account_locked(user),
@@ -151,14 +150,14 @@ class ServiceUser(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
                     self.model.deleted_at.is_(None)
                 ).first()
                 if existing_email:
-                    raise ServiceValidationError(f"Usuário com email {create_dto.email} já existe.")
+                    raise ServiceException(f"Usuário com email {create_dto.email} já existe.")
                 
                 existing_username = self.db.query(self.model).filter(
                     self.model.username == create_dto.username,
                     self.model.deleted_at.is_(None)
                 ).first()
                 if existing_username:
-                    raise ServiceValidationError(f"Usuário com username {create_dto.username} já existe.")
+                    raise ServiceException(f"Usuário com username {create_dto.username} já existe.")
                 
                 # Criar dados do usuário sem a senha
                 user_data = create_dto.model_dump(exclude={'password'})
@@ -179,7 +178,7 @@ class ServiceUser(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
                 return self._to_response_dto(instance)
         except IE as e:
             logger.error(f"Erro de integridade ao criar usuário: {str(e)}")
-            raise ServiceIntegrityError(f"Erro ao criar usuário: {str(e)}")
+            raise ServiceException(f"Erro ao criar usuário: {str(e)}")
         except ServiceValidationError:
             raise
         except Exception as e:
@@ -190,12 +189,12 @@ class ServiceUser(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
         """Atualiza um recurso existente."""
         instance = self.db.query(self.model).filter(self.model.id == id).first()
         if not instance:
-            raise NotFoundError(resource_name=self.model.__name__, resource_id=id)
+            raise ServiceException(resource_name=self.model.__name__, resource_id=id)
         try:
             with self.transaction():
                 update_data = update_dto.model_dump(exclude_unset=True)
                 if not update_data:
-                    raise ServiceValidationError("Pelo menos um campo deve ser fornecido para atualização")
+                    raise ServiceException("Pelo menos um campo deve ser fornecido para atualização")
                 for field, value in update_data.items():
                     setattr(instance, field, value)
                 if hasattr(instance, 'updated_by'):
@@ -204,7 +203,7 @@ class ServiceUser(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
                 return self._to_response_dto(instance)
         except ServiceIntegrityError as e:
             logger.error(f"Erro de integridade ao atualizar {self.model.__name__}: {str(e)}")
-            raise ServiceIntegrityError(f"Erro ao atualizar {self.model.__name__}: {str(e)}")
+            raise ServiceException(f"Erro ao atualizar {self.model.__name__}: {str(e)}")
         except Exception as e:
             logger.error(f"Erro inesperado ao atualizar {self.model.__name__}: {str(e)}")
             raise ServiceException(f"Erro inesperado ao atualizar {self.model.__name__}")
@@ -212,7 +211,7 @@ class ServiceUser(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
     def delete(self, id: UUID, current_user_id: Optional[UUID] = None, hard_delete: bool = False) -> bool:
         instance = self.db.query(self.model).filter(self.model.id == id).first()
         if not instance:
-            raise NotFoundError(resource_name=self.model.__name__, resource_id=id)
+            raise ServiceException(resource_name=self.model.__name__, resource_id=id)
         try:
             with self.transaction():
                 if hard_delete or not hasattr(self.model, 'deleted_at'):
@@ -254,19 +253,19 @@ class ServiceUser(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
                 errors={"role_ids": "Too many roles"}
             )
         if len(role_ids) != len(set(role_ids)):
-            raise ServiceValidationError(
+            raise ServiceException(
                 message="Papéis duplicados não são permitidos",
                 errors={"role_ids": "Duplicatas detectadas"}
             )
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user:
-            raise NotFoundError(resource_name="User", resource_id=user_id)
+            raise ServiceException(resource_name="User", resource_id=user_id)
             
         roles = self.db.query(Role).filter(Role.id.in_(role_ids)).all()
         if len(roles) != len(role_ids):
             found_ids = {str(role.id) for role in roles}
             missing_ids = [str(rid) for rid in role_ids if rid not in found_ids]
-            raise NotFoundError(
+            raise ServiceException(
                 message=f"Some roles not found: {', '.join(missing_ids)}",
                 code="roles_not_found"
             )
@@ -287,7 +286,7 @@ class ServiceUser(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
         """Set user password hash"""
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user:
-            raise NotFoundError(resource_name="User", resource_id=user_id)
+            raise ServiceException(resource_name="User", resource_id=user_id)
             
         try:
             user._password_hash = password_hash
@@ -300,5 +299,3 @@ class ServiceUser(BaseService[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
         except Exception as e:
             self.db.rollback()
             raise ServiceException(f"Error setting password: {str(e)}")
-
-__all__ = ['ServiceUser']

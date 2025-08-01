@@ -2,9 +2,9 @@ from sqlalchemy.orm import Session
 from typing import List
 from src.model.permission import Permission
 from src.schema.permission import DTOPermissionCreate, DTOPermissionUpdate, DTOPermissionRetrieve
-from src.service.base import BaseService
+from src.service.basic import ServiceBase
 
-class ServicePermission(BaseService[Permission, DTOPermissionCreate, DTOPermissionUpdate, DTOPermissionRetrieve]):
+class ServicePermission(ServiceBase[Permission, DTOPermissionCreate, DTOPermissionUpdate, DTOPermissionRetrieve]):
     """Permission service with additional permission-specific methods"""
     
     def __init__(self, db: Session):
@@ -17,5 +17,3 @@ class ServicePermission(BaseService[Permission, DTOPermissionCreate, DTOPermissi
             query = query.filter(self.model.deleted_at.is_(None))
         instances = query.all()
         return [self._to_response_dto(instance) for instance in instances]
-    
-__all__ = ['ServicePermission']

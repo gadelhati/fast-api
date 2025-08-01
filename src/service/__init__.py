@@ -1,3 +1,3 @@
-from .base import BaseService, ServiceException, NotFoundError, IntegrityError, ValidationError
+from .basic import ServiceBase, ServiceException
 from .user import ServiceUser
 from .role import ServiceRole
