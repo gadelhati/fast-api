@@ -1,5 +1,5 @@
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from passlib.context import CryptContext
@@ -179,7 +179,7 @@ class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
         except IE as e:
             logger.error(f"Erro de integridade ao criar usuário: {str(e)}")
             raise ServiceException(f"Erro ao criar usuário: {str(e)}")
-        except ServiceValidationError:
+        except ServiceException:
             raise
         except Exception as e:
             logger.error(f"Erro inesperado ao criar usuário: {str(e)}")
@@ -201,7 +201,7 @@ class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
                     instance.updated_by = current_user_id
                 self.db.refresh(instance)
                 return self._to_response_dto(instance)
-        except ServiceIntegrityError as e:
+        except ServiceException as e:
             logger.error(f"Erro de integridade ao atualizar {self.model.__name__}: {str(e)}")
             raise ServiceException(f"Erro ao atualizar {self.model.__name__}: {str(e)}")
         except Exception as e:
