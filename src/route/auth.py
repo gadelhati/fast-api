@@ -1,5 +1,3 @@
-# Router administrativo separado para funções de segurança
-
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 from uuid import UUID

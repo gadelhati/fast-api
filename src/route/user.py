@@ -7,7 +7,7 @@ from src.schema.user import DTOUserCreate, DTOUserUpdate, DTOUserRetrieve
 from src.service.user import ServiceUser
 from uuid import UUID
 
-user = APIRouter()
+user = APIRouter(prefix="/user", tags=["user"])
 
 @user.post("/swagger", status_code=200)
 async def create(form_data: OAuth2PasswordRequestForm=Depends(), db: Session=Depends(get_db)):

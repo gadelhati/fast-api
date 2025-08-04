@@ -2,8 +2,8 @@ from fastapi import Body, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 from src.database import engine
-from src.route.routeUser import user
-from src.route.router import admin_router
+from src.route.user import user
+from src.route.auth import admin_router
 from src.database import Base
 
 try:
@@ -32,5 +32,5 @@ app.add_middleware(
 async def home():
     return {"message": "Welcome Fast API by Gadelha TI", "status": "success"}
 
-app.include_router(user, prefix="/user", tags=["user"])
+app.include_router(user)
 app.include_router(admin_router)
