@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 from src.database import engine
 from src.route.user import user
-from src.route.auth import admin_router
+from src.route.auth import auth
+from src.route.admin import admin
 from src.database import Base
 
 try:
@@ -32,5 +33,6 @@ app.add_middleware(
 async def home():
     return {"message": "Welcome Fast API by Gadelha TI", "status": "success"}
 
+app.include_router(auth)
+app.include_router(admin)
 app.include_router(user)
-app.include_router(admin_router)
