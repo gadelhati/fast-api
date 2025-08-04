@@ -10,127 +10,124 @@ from src.schema import (DTOUserCreate, DTOUserUpdate, DTOUserRetrieve)
 from pydantic import ValidationError
 from src.service.basic import ServiceBase, ServiceException
 from src.validation.validations import Validation
-from sqlalchemy.exc import IntegrityError as IE
+from src.config import SECRET_KEY, ALGORITHM
+from jose import jwt, JWTError, ExpiredSignatureError
 import logging
 
 logger = logging.getLogger(__name__)
 
 class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetrieve]):
+    """User service with additional user-specific methods."""
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    """User service with additional user-specific methods"""
     
     def __init__(self, db: Session):
-        super().__init__(User, db)
-    
+        super().__init__(User, db, DTOUserRetrieve)
+
     def _increment_failed_attempts(self, user: User) -> None:
-        """Incrementa tentativas de login falhadas (método interno)."""
+        """Increments failed login attempts."""
         user.failed_login_attempts += 1
         if user.failed_login_attempts >= self.MAX_FAILED_ATTEMPTS:
             user.locked_until = datetime.now() + timedelta(minutes=self.LOCKOUT_DURATION_MINUTES)
-            logger.warning(f"Conta bloqueada por tentativas excessivas: {user.username}")
-    
+            logger.warning(f"Account blocked for excessive attempts: {user.username}")
+
     def _reset_failed_attempts(self, user: User) -> None:
-        """Reseta tentativas falhadas após login bem-sucedido (método interno)."""
+        """Resets failed attempts after successful login."""
         user.failed_login_attempts = 0
         user.locked_until = None
         user.last_login = datetime.now()
     
     def _is_account_locked(self, user: User) -> bool:
-        """Verifica se a conta está bloqueada (método interno)."""
+        """Checks if the account is blocked."""
         if user.locked_until is None:
             return False
-        
         if datetime.now() >= user.locked_until:
-            # Auto-desbloqueio após período expirar
+            # Auto-unlock after period expires
             user.locked_until = None
             user.failed_login_attempts = 0
             return False
-        
         return True
     
+    def get_current_user(self, token: str) -> DTOUserRetrieve:
+        """Resolves the authenticated user from the token"""
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id: str = payload.get("sub")
+            if user_id is None:
+                raise ServiceException("Invalid token", code="invalid_token")
+            user = self._get_instance(UUID(user_id))
+            if not user or (hasattr(user, "deleted_at") or user.deleted_at is not None):
+                raise ServiceException("User not found", code="not_found")
+            return self._to_response_dto(user)
+        except ExpiredSignatureError:
+            raise ServiceException("Expired token", code="token_expired")
+        except JWTError:
+            raise ServiceException("Invalid token", code="invalid_token")
+
     def authenticate_user(self, username_or_email: str, password: str) -> Optional[DTOUserRetrieve]:
         """
-        Autentica usuário e gerencia controles de segurança.
-        Método para uso do sistema de autenticação - NÃO expor na API.
+        Authenticates user and manages security controls.
+        Method for using the authentication system - DO NOT expose in the API.
         """
         try:
-            # Buscar usuário por username ou email
-            user = None
-            if "@" in username_or_email:
-                user = self.db.query(User).filter(
-                    User.email == username_or_email,
-                    User.deleted_at.is_(None)
-                ).first()
-            else:
-                user = self.db.query(User).filter(
-                    User.username == username_or_email,
-                    User.deleted_at.is_(None)
-                ).first()
-            
+            user = self.db.query(User).filter(
+                User.username == username_or_email,
+                User.deleted_at.is_(None)
+            ).first()
+            # Login attempt with non-existent user
             if not user:
-                logger.warning(f"Tentativa de login com usuário inexistente: {username_or_email}")
+                logger.warning(f"Incorrect username or password: {username_or_email}")
                 return None
             
-            # Verificar se conta está bloqueada
             if self._is_account_locked(user):
-                logger.warning(f"Tentativa de login em conta bloqueada: {user.username}")
+                logger.warning(f"Login attempt to blocked account: {user.username}")
                 return None
-            
-            # Verificar se conta está ativa
             if not user.is_active:
-                logger.warning(f"Tentativa de login em conta inativa: {user.username}")
+                logger.warning(f"Attempted login to inactive account: {user.username}")
                 return None
-            
-            # Verificar senha
+            # Incorrect password for user
             if not self.pwd_context.verify(password, user.password):
                 self._increment_failed_attempts(user)
                 self.db.commit()
-                logger.warning(f"Senha incorreta para usuário: {user.username}")
+                logger.warning(f"Incorrect username or password")
                 return None
-            
-            # Login bem-sucedido
             self._reset_failed_attempts(user)
             self.db.commit()
-            logger.info(f"Login bem-sucedido: {user.username}")
-            
+            logger.info(f"Successful login: {user.username}")
             return self._to_response_dto(user)
             
         except Exception as e:
-            logger.error(f"Erro durante autenticação: {str(e)}")
+            logger.error(f"Error during authentication: {str(e)}")
             self.db.rollback()
             return None
     
     def unlock_account(self, user_id: UUID, current_user_id: Optional[UUID] = None) -> bool:
         """
-        Desbloqueia uma conta manualmente (apenas para administradores).
-        Pode ser exposto em endpoint administrativo com permissões específicas.
+        Unlock an account manually (admins only).
+        Can be exposed on administrative endpoint with specific permissions.
         """
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user:
             raise ServiceException(resource_name="User", resource_id=user_id)
-        
         try:
             with self.transaction():
                 user.failed_login_attempts = 0
                 user.locked_until = None
                 if hasattr(user, 'updated_by'):
                     user.updated_by = current_user_id
-                
-                logger.info(f"Conta desbloqueada manualmente: {user.username} por usuário {current_user_id}")
+                logger.info(f"Account unlocked manually: {user.username} por usuário {current_user_id}")
                 return True
         except Exception as e:
-            logger.error(f"Erro ao desbloquear conta: {str(e)}")
-            raise ServiceException(f"Erro ao desbloquear conta: {str(e)}")
+            logger.error(f"Error unlocking account: {str(e)}")
+            raise ServiceException(f"Error unlocking account: {str(e)}")
     
     def get_security_status(self, user_id: UUID) -> dict:
         """
-        Retorna status de segurança (apenas para administradores).
-        Pode ser usado internamente ou em endpoint administrativo.
+        Returns security status (administrators only).
+        Can be used internally or on an administrative endpoint.
         """
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user:
             raise ServiceException(resource_name="User", resource_id=user_id)
-        
         return {
             "is_locked": self._is_account_locked(user),
             "failed_attempts": user.failed_login_attempts,
@@ -140,108 +137,19 @@ class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
             "is_verified": user.is_verified
         }
     
-    def create(self, create_dto: DTOUserCreate, current_user_id: Optional[UUID] = None) -> DTOUserRetrieve:
-        """Cria um novo usuário com senha hasheada."""
-        try:
-            with self.transaction():
-                # Verificação de constraints únicos
-                existing_email = self.db.query(self.model).filter(
-                    self.model.email == create_dto.email,
-                    self.model.deleted_at.is_(None)
-                ).first()
-                if existing_email:
-                    raise ServiceException(f"Usuário com email {create_dto.email} já existe.")
-                
-                existing_username = self.db.query(self.model).filter(
-                    self.model.username == create_dto.username,
-                    self.model.deleted_at.is_(None)
-                ).first()
-                if existing_username:
-                    raise ServiceException(f"Usuário com username {create_dto.username} já existe.")
-                
-                # Criar dados do usuário sem a senha
-                user_data = create_dto.model_dump(exclude={'password'})
-                instance = self.model(**user_data)
-                
-                # Hash da senha
-                instance.password = self.pwd_context.hash(create_dto.password)
-                
-                # ✅ Inicializar campos de segurança com valores padrão seguros
-                instance.failed_login_attempts = 0
-                instance.locked_until = None
-                instance.last_login = None
-                
-                self._apply_audit_fields(instance, current_user_id)
-                self.db.add(instance)
-                logger.info(f"Criando usuário: {create_dto.username}")
-                self.db.refresh(instance)
-                return self._to_response_dto(instance)
-        except IE as e:
-            logger.error(f"Erro de integridade ao criar usuário: {str(e)}")
-            raise ServiceException(f"Erro ao criar usuário: {str(e)}")
-        except ServiceException:
-            raise
-        except Exception as e:
-            logger.error(f"Erro inesperado ao criar usuário: {str(e)}")
-            raise ServiceException(f"Erro inesperado ao criar usuário")
-
-    def update(self, id: UUID, update_dto: DTOUserUpdate, current_user_id: Optional[UUID] = None) -> DTOUserRetrieve:
-        """Atualiza um recurso existente."""
-        instance = self.db.query(self.model).filter(self.model.id == id).first()
-        if not instance:
-            raise ServiceException(resource_name=self.model.__name__, resource_id=id)
-        try:
-            with self.transaction():
-                update_data = update_dto.model_dump(exclude_unset=True)
-                if not update_data:
-                    raise ServiceException("Pelo menos um campo deve ser fornecido para atualização")
-                for field, value in update_data.items():
-                    setattr(instance, field, value)
-                if hasattr(instance, 'updated_by'):
-                    instance.updated_by = current_user_id
-                self.db.refresh(instance)
-                return self._to_response_dto(instance)
-        except ServiceException as e:
-            logger.error(f"Erro de integridade ao atualizar {self.model.__name__}: {str(e)}")
-            raise ServiceException(f"Erro ao atualizar {self.model.__name__}: {str(e)}")
-        except Exception as e:
-            logger.error(f"Erro inesperado ao atualizar {self.model.__name__}: {str(e)}")
-            raise ServiceException(f"Erro inesperado ao atualizar {self.model.__name__}")
-
-    def delete(self, id: UUID, current_user_id: Optional[UUID] = None, hard_delete: bool = False) -> bool:
-        instance = self.db.query(self.model).filter(self.model.id == id).first()
-        if not instance:
-            raise ServiceException(resource_name=self.model.__name__, resource_id=id)
-        try:
-            with self.transaction():
-                if hard_delete or not hasattr(self.model, 'deleted_at'):
-                    self.db.delete(instance)
-                else:
-                    instance.deleted_at = datetime.now()
-                    if hasattr(instance, 'deleted_by'):
-                        instance.deleted_by = current_user_id
-                return True
-        except Exception as e:
-            logger.error(f"Erro ao deletar {self.model.__name__}: {str(e)}")
-            raise ServiceException(f"Erro ao deletar {self.model.__name__}")
-        
     def get_by_email(self, email: str, include_deleted: bool = False) -> Optional[DTOUserRetrieve]:
         """Get user by email"""
         query = self.db.query(self.model).filter(self.model.email == email)
-        
         if not include_deleted and hasattr(self.model, 'deleted_at'):
             query = query.filter(self.model.deleted_at.is_(None))
-            
         instance = query.first()
         return self._to_response_dto(instance) if instance else None
     
     def get_by_username(self, username: str, include_deleted: bool = False) -> Optional[DTOUserRetrieve]:
         """Get user by username"""
         query = self.db.query(self.model).filter(self.model.username == username)
-        
         if not include_deleted and hasattr(self.model, 'deleted_at'):
             query = query.filter(self.model.deleted_at.is_(None))
-            
         instance = query.first()
         return self._to_response_dto(instance) if instance else None
     
@@ -260,7 +168,6 @@ class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user:
             raise ServiceException(resource_name="User", resource_id=user_id)
-            
         roles = self.db.query(Role).filter(Role.id.in_(role_ids)).all()
         if len(roles) != len(role_ids):
             found_ids = {str(role.id) for role in roles}
@@ -269,7 +176,6 @@ class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
                 message=f"Some roles not found: {', '.join(missing_ids)}",
                 code="roles_not_found"
             )
-            
         try:
             user.roles = roles
             if hasattr(user, 'updated_by'):
@@ -282,20 +188,17 @@ class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
             logger.error(f"Error updating user roles: {str(e)}")
             raise ServiceException(f"Error updating user roles: {str(e)}")
     
-    def set_password(self, user_id: UUID, password_hash: str, current_user_id: Optional[UUID] = None) -> bool:
+    def set_password(self, user_id: UUID, password: str, current_user_id: Optional[UUID] = None) -> bool:
         """Set user password hash"""
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user:
-            raise ServiceException(resource_name="User", resource_id=user_id)
-            
+            raise ServiceException(f"User with id {user_id} not found")
         try:
-            user._password_hash = password_hash
+            user.password = self.pwd_context.hash(password)
             if hasattr(user, 'updated_by'):
                 user.updated_by = current_user_id
-                
             self.db.commit()
             return True
-            
         except Exception as e:
             self.db.rollback()
             raise ServiceException(f"Error setting password: {str(e)}")

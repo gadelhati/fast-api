@@ -2,28 +2,28 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from src.database import get_db
 from sqlalchemy.orm import Session
-from src.schema.basic import ResponseError
+from src.schema.basic import ResponseError, SchemaSwagger
 from src.schema.user import DTOUserCreate, DTOUserUpdate, DTOUserRetrieve
-from src.service.serviceUser import ServiceUser
+from src.service.user import ServiceUser
 from uuid import UUID
 
 user = APIRouter()
 
-# @user.post("/swagger", status_code=200)
-# async def create(form_data: OAuth2PasswordRequestForm=Depends(), db: Session=Depends(get_db)):
-#     try:
-#         print(form_data)
-#         return ResponseError(code=200, status="Ok", message="Ok", validationErrors="_result").dict(exclude_none=True)
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
+@user.post("/swagger", status_code=200)
+async def create(form_data: OAuth2PasswordRequestForm=Depends(), db: Session=Depends(get_db)):
+    try:
+        print(form_data)
+        return ResponseError(code=200, status="Ok", message="Ok", validationErrors="_result").dict(exclude_none=True)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-# @user.post("/login", status_code=200)
-# async def create(request: SchemaSwagger, db: Session=Depends(get_db)):
-#     try:
-#         _result = ServiceUser.login(db, created=request)
-#         return ResponseError(code=200, status="Ok", message="Ok", validationErrors=_result).dict(exclude_none=True)
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
+@user.post("/login", status_code=200)
+async def create(request: SchemaSwagger, db: Session=Depends(get_db)):
+    try:
+        _result = ServiceUser.login(db, created=request)
+        return ResponseError(code=200, status="Ok", message="Ok", validationErrors=_result).dict(exclude_none=True)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @user.post("/", status_code=201)
 async def create(request: DTOUserCreate, db: Session=Depends(get_db), current_user=Depends(ServiceUser.get_current_user)):
