@@ -1,10 +1,10 @@
 from pydantic import BaseModel, EmailStr, field_validator, Field
 from typing import List
 from src.validation.validations import Validation
+
 from src.schema.basic import BaseConfig
 from src.schema.user import DTOUserRetrieve
 from src.schema.role import DTORoleRetrieve
-from typing import TYPE_CHECKING
 
 class DTOLogin(BaseModel):
     """DTO for login"""
@@ -28,7 +28,7 @@ class DTOToken(BaseModel):
     refreshToken: str
     expires_in: int
     user: DTOUserRetrieve
-    roles: List['DTORoleRetrieve'] = Field(default_factory=list)
+    roles: List["DTORoleRetrieve"] = Field(default_factory=list)
 
     model_config = BaseConfig.model_config
 

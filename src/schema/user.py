@@ -2,13 +2,10 @@ from pydantic import BaseModel, EmailStr, field_validator, Field
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
+
 from src.validation.validations import Validation
 from src.schema.basic import BaseConfig, DTOMixinAudit, DTOSoftDeleteMixin, DTOPagination
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from src.schema.role import DTORoleRetrieve
-DTORoleRetrieve = None
+from src.schema.role import DTORoleRetrieve
 
 class DTOUserCreate(BaseModel):
     """DTO for creating a user"""
@@ -101,7 +98,7 @@ class DTOUserRetrieve(DTOMixinAudit, DTOSoftDeleteMixin):
     is_active: bool
     is_verified: bool
     last_login: Optional[datetime] = None
-    roles: List['DTORoleRetrieve'] = Field(default_factory=list)
+    roles: List["DTORoleRetrieve"] = Field(default_factory=list)
 
 class DTOUserRoleUpdate(BaseModel):
     """DTO for updating only user roles"""
