@@ -10,7 +10,7 @@ from src.schema import (DTOUserCreate, DTOUserUpdate, DTOUserRetrieve)
 from pydantic import ValidationError
 from src.service.basic import ServiceBase, ServiceException
 from src.validation.validations import Validation
-from src.config import SECRET_KEY, ALGORITHM
+from src.config import JWT_SECRET_KEY, ALGORITHM
 from jose import jwt, JWTError, ExpiredSignatureError
 import logging
 
@@ -50,7 +50,7 @@ class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
     def get_current_user(self, token: str) -> DTOUserRetrieve:
         """Resolves the authenticated user from the token"""
         try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
             user_id: str = payload.get("sub")
             if user_id is None:
                 raise ServiceException("Invalid token", code="invalid_token")
@@ -73,18 +73,15 @@ class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
                 User.username == username_or_email,
                 User.deleted_at.is_(None)
             ).first()
-            # Login attempt with non-existent user
             if not user:
                 logger.warning(f"Incorrect username or password: {username_or_email}")
                 return None
-            
             if self._is_account_locked(user):
                 logger.warning(f"Login attempt to blocked account: {user.username}")
                 return None
             if not user.is_active:
                 logger.warning(f"Attempted login to inactive account: {user.username}")
                 return None
-            # Incorrect password for user
             if not self.pwd_context.verify(password, user.password):
                 self._increment_failed_attempts(user)
                 self.db.commit()
@@ -92,7 +89,6 @@ class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
                 return None
             self._reset_failed_attempts(user)
             self.db.commit()
-            logger.info(f"Successful login: {user.username}")
             return self._to_response_dto(user)
             
         except Exception as e:
