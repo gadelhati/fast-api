@@ -1,6 +1,7 @@
 from typing import Type, TypeVar, Generic, Optional, List, Any, Dict
 from uuid import UUID
 from datetime import datetime
+from sqlalchemy import inspect
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError as SAIntegrityError
 from pydantic import BaseModel
@@ -65,16 +66,20 @@ class ServiceBase(Generic[TModel, TCreateSchema, TUpdateSchema, TResponseSchema]
             raise ServiceException(f"{self.model.__name__} with id {id} not found", code="not_found")
         return self._to_response_dto(instance)
 
-    def list(self, page: int = 1, limit: int = 20, include_deleted: bool = False) -> Dict[str, Any]:
-        """List resources with pagination"""
+    def list(self, page: int = 1, limit: int = 20, include_deleted: bool = False, **filters: Any) -> Dict[str, Any]:
+        """List with optional filters and pagination"""
         query = self.db.query(self.model)
+        model_columns = set(c.key for c in inspect(self.model).mapper.column_attrs)
+        for attr, value in filters.items():
+            if attr in model_columns:
+                query = query.filter(getattr(self.model, attr) == value)
         if not include_deleted and hasattr(self.model, 'deleted_at'):
             query = query.filter(self.model.deleted_at.is_(None))
         total = query.count()
         items = query.offset((page - 1) * limit).limit(limit).all()
         total_pages = ceil(total / limit) if limit else 1
         return {
-            "items": [self._to_response_dto(i) for i in items],
+            "items": [self._to_response_dto(item) for item in items],
             "pagination": DTOPagination(
                 total=total,
                 page=page,
