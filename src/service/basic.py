@@ -114,20 +114,30 @@ class ServiceBase(Generic[TModel, TCreateSchema, TUpdateSchema, TResponseSchema]
         except Exception as e:
             self._handle_exception(e, "update")
 
-    def delete(self, id: UUID, current_user_id: Optional[UUID] = None, hard_delete: bool = False) -> bool:
-        """Delete a resource (soft delete by default)"""
+    def delete(self, id: UUID) -> bool:
+        """Hard delete: permanently remove the record from the bank."""
         instance = self._get_instance(id)
         if not instance:
             raise ServiceException(f"{self.model.__name__} with id {id} not found", code="not_found")
         try:
-            if hard_delete or not hasattr(self.model, 'deleted_at'):
-                # Hard delete
-                self.db.delete(instance)
-            else:
-                # Soft delete
-                instance.deleted_at = datetime.now()
-                if hasattr(instance, 'deleted_by'):
-                    instance.deleted_by = current_user_id
+            self.db.delete(instance)
+            self.db.commit()
+            return True
+        except Exception as e:
+            self._handle_exception(e, "excluir")
+
+
+    def soft_delete(self, id: UUID, current_user_id: Optional[UUID] = None) -> bool:
+        """Soft delete: mark as deleted without removing from the database."""
+        instance = self._get_instance(id)
+        if not instance:
+            raise ServiceException(f"{self.model.__name__} with id {id} not found", code="not_found")
+        if not hasattr(self.model, 'deleted_at'):
+            raise ServiceException(f"{self.model.__name__} does not support soft delete", code="not_supported")
+        try:
+            instance.deleted_at = datetime.now()
+            if hasattr(instance, 'deleted_by'):
+                instance.deleted_by = current_user_id
             self.db.commit()
             return True
         except Exception as e:
