@@ -7,7 +7,6 @@ from src.schema.basic import DTOMixinAudit, DTOSoftDeleteMixin, DTOPagination
 
 class DTOPermissionRetrieve(DTOMixinAudit, DTOSoftDeleteMixin):
     """DTO for permission response"""
-    id: UUID
     name: str
     description: Optional[str] = None
     action: EnumPermissionAction
