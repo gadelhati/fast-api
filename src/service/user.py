@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from typing import Optional, List
+from typing import Optional, List, Union, Any
 from passlib.context import CryptContext
 from src.model.user import User
 from src.model.role import Role
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetrieve]):
     """User service with additional user-specific methods."""
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     
     def __init__(self, db: Session):
         super().__init__(User, db, DTOUserRetrieve)
@@ -63,6 +63,26 @@ class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
         except JWTError:
             raise ServiceException("Invalid token", code="invalid_token")
 
+    def create_access_token(subject: Union[str, Any], expires_delta: int = None) -> str:
+        if expires_delta is not None:
+            expires_delta = datetime.utcnow() + expires_delta
+        else:
+            expires_delta = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
+        to_encode = {"exp": expires_delta, "sub": str(subject)}
+        encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, ALGORITHM)
+        return encoded_jwt
+
+    def create_refresh_token(subject: Union[str, Any], expires_delta: int = None) -> str:
+        if expires_delta is not None:
+            expires_delta = datetime.utcnow() + expires_delta
+        else:
+            expires_delta = datetime.utcnow() + timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
+
+        to_encode = {"exp": expires_delta, "sub": str(subject)}
+        encoded_jwt = jwt.encode(to_encode, JWT_REFRESH_SECRET_KEY, ALGORITHM)
+        return encoded_jwt
+
     def authenticate_user(self, username_or_email: str, password: str) -> Optional[DTOUserRetrieve]:
         """
         Authenticates user and manages security controls.
@@ -82,7 +102,7 @@ class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
             if not user.is_active:
                 logger.warning(f"Attempted login to inactive account: {user.username}")
                 return None
-            if not self.pwd_context.verify(password, user.password):
+            if not self.password_context.verify(password, user.password):
                 self._increment_failed_attempts(user)
                 self.db.commit()
                 logger.warning(f"Incorrect username or password")
@@ -190,7 +210,7 @@ class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
         if not user:
             raise ServiceException(f"User with id {user_id} not found")
         try:
-            user.password = self.pwd_context.hash(password)
+            user.password = self.password_context.hash(password)
             if hasattr(user, 'updated_by'):
                 user.updated_by = current_user_id
             self.db.commit()
