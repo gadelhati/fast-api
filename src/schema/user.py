@@ -1,5 +1,6 @@
+from __future__ import annotations
 from pydantic import BaseModel, EmailStr, field_validator, Field
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from uuid import UUID
 from datetime import datetime
 
@@ -128,7 +129,7 @@ class DTOPasswordUpdate(BaseModel):
 
 class DTOUserRetrieveAll(DTOPagination):
     """DTO for user list response with pagination"""
-    items: List['DTOUserRetrieve']
+    items: List["DTOUserRetrieve"]
 
 # Rebuild models to resolve forward references in circular relationships
 DTOUserRetrieve.model_rebuild()

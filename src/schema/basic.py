@@ -1,5 +1,6 @@
+from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Optional, List, Generic, TypeVar
+from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from pydantic import BaseModel, field_validator, Field
 from typing import Optional, List
 from uuid import UUID
@@ -75,7 +76,6 @@ class DTORoleRetrieve(DTOMixinAudit, DTOSoftDeleteMixin):
     description: Optional[str] = None
     is_default: bool
     permissions: List["DTOPermissionRetrieve"] = Field(default_factory=list)
-    # user_ids: List["DTOUserRetrieve"] = Field(default_factory=list)
 
 class DTORoleRetrieveAll(DTOPagination):
     """DTO for role list response with pagination"""

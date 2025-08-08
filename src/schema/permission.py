@@ -1,10 +1,9 @@
-from pydantic import Field
+from __future__ import annotations
 from typing import Optional, List
 from uuid import UUID
 
 from src.enum.permissionAction import EnumPermissionAction
 from src.schema.basic import DTOMixinAudit, DTOSoftDeleteMixin, DTOPagination
-from src.schema.role import DTORoleRetrieve
 
 class DTOPermissionRetrieve(DTOMixinAudit, DTOSoftDeleteMixin):
     """DTO for permission response"""
@@ -12,7 +11,6 @@ class DTOPermissionRetrieve(DTOMixinAudit, DTOSoftDeleteMixin):
     name: str
     description: Optional[str] = None
     action: EnumPermissionAction
-    roles: List["DTORoleRetrieve"] = Field(default_factory=list)
 
 class DTOPermissionRetrieveAll(DTOPagination):
     """DTO for permission list response with pagination"""
