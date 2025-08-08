@@ -1,5 +1,6 @@
 .env
 .venv
+src/import.sql
 src/.venv
 __pycache__
 src/__pycache_
