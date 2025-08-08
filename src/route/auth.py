@@ -1,9 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
-from uuid import UUID
-
+from uuid import uuid4
 from src.database import get_db
-from src.schema.basic import ResponseError
+from src.schema.auth import DTOLogin
 from src.service.user import ServiceUser
 
 auth = APIRouter(prefix="/auth", tags=["auth"])
@@ -46,8 +45,8 @@ async def authenticate_user(
     }
 
 
-@auth.post('/signup', summary="Create new user", response_model=UserOut)
-async def create_user(data: UserAuth):
+@auth.post('/signup', summary="Create new user", response_model=DTOLogin)
+async def create_user(data: DTOLogin):
     # querying database to check if user already exist
     user = db.get(data.email, None)
     if user is not None:
