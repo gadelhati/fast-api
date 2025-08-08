@@ -10,7 +10,7 @@ from src.schema import (DTOUserCreate, DTOUserUpdate, DTOUserRetrieve)
 from pydantic import ValidationError
 from src.service.basic import ServiceBase, ServiceException
 from src.validation.validations import Validation
-from src.config import JWT_SECRET_KEY, ALGORITHM
+from src.config import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_MINUTES, ALGORITHM, JWT_SECRET_KEY, JWT_REFRESH_SECRET_KEY
 from jose import jwt, JWTError, ExpiredSignatureError
 import logging
 
@@ -102,7 +102,7 @@ class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
             if not user.is_active:
                 logger.warning(f"Attempted login to inactive account: {user.username}")
                 return None
-            if not self.password_context.verify(password, user.password):
+            if not self.password_context.verify(password, user._password_hash):
                 self._increment_failed_attempts(user)
                 self.db.commit()
                 logger.warning(f"Incorrect username or password")
@@ -210,7 +210,7 @@ class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
         if not user:
             raise ServiceException(f"User with id {user_id} not found")
         try:
-            user.password = self.password_context.hash(password)
+            user._password_hash = self.password_context.hash(password)
             if hasattr(user, 'updated_by'):
                 user.updated_by = current_user_id
             self.db.commit()
