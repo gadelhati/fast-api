@@ -1,5 +1,5 @@
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from typing import Optional, List, Union, Any
 from passlib.context import CryptContext
@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetrieve]):
     """User service with additional user-specific methods."""
     password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    MAX_FAILED_ATTEMPTS = 5
+    LOCKOUT_DURATION_MINUTES = 60
     
     def __init__(self, db: Session):
         super().__init__(User, db, DTOUserRetrieve)
@@ -65,9 +67,9 @@ class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
 
     def create_access_token(subject: Union[str, Any], expires_delta: int = None) -> str:
         if expires_delta is not None:
-            expires_delta = datetime.utcnow() + expires_delta
+            expires_delta = datetime.now(timezone.utc) + expires_delta
         else:
-            expires_delta = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+            expires_delta = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
         to_encode = {"exp": expires_delta, "sub": str(subject)}
         encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, ALGORITHM)
@@ -75,9 +77,9 @@ class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
 
     def create_refresh_token(subject: Union[str, Any], expires_delta: int = None) -> str:
         if expires_delta is not None:
-            expires_delta = datetime.utcnow() + expires_delta
+            expires_delta = datetime.now(timezone.utc) + expires_delta
         else:
-            expires_delta = datetime.utcnow() + timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
+            expires_delta = datetime.now(timezone.utc) + timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
 
         to_encode = {"exp": expires_delta, "sub": str(subject)}
         encoded_jwt = jwt.encode(to_encode, JWT_REFRESH_SECRET_KEY, ALGORITHM)
