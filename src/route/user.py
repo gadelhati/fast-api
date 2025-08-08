@@ -20,7 +20,7 @@ async def create(form_data: OAuth2PasswordRequestForm=Depends(), db: Session=Dep
 @user.post("/login", status_code=200)
 async def create(request: SchemaSwagger, db: Session=Depends(get_db)):
     try:
-        _result = ServiceUser.login(db, created=request)
+        _result = ServiceUser.authenticate_user(db, created=request)
         return ResponseError(code=200, status="Ok", message="Ok", validationErrors=_result).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
