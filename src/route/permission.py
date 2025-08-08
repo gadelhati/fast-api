@@ -9,10 +9,7 @@ from src.enum.permissionAction import EnumPermissionAction
 from src.service.basic import ServiceException
 from src.database import get_db
 
-permission = APIRouter(
-    prefix="/permissions",
-    tags=["permissions"]
-)
+permission = APIRouter(prefix="/permissions", tags=["permissions"])
 
 def get_permission_service(db: Session = Depends(get_db)) -> ServicePermission:
     """Dependency to get permission service instance"""

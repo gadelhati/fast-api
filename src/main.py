@@ -5,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from src.database import engine
 from src.database import Base
 from src.route.user import user
-from src.route.auth import auth
+from src.route.role import role
 from src.route.admin import admin
 from src.route.permission import permission
 
@@ -36,6 +36,6 @@ async def home():
     return {"message": "Welcome Fast API by Gadelha TI", "status": "success"}
 
 app.include_router(permission)
-app.include_router(auth)
+app.include_router(role)
 app.include_router(admin)
 app.include_router(user)
