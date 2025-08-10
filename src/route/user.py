@@ -4,6 +4,7 @@ from src.database import get_db
 from sqlalchemy.orm import Session
 from src.schema.basic import ResponseError, SchemaSwagger
 from src.schema.user import DTOUserCreate, DTOUserUpdate, DTOUserRetrieve
+from src.schema.auth import DTOToken
 from src.service.user import ServiceUser
 from uuid import UUID
 
@@ -20,7 +21,7 @@ async def create(form_data: OAuth2PasswordRequestForm=Depends(), db: Session=Dep
 @user.post("/login", status_code=200)
 async def create(request: SchemaSwagger, db: Session=Depends(get_db)):
     try:
-        _result = ServiceUser.authenticate_user(db, created=request)
+        _result = ServiceUser.authenticate_user(db, request.username, request.password)
         return ResponseError(code=200, status="Ok", message="Ok", validationErrors=_result).dict(exclude_none=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -42,7 +43,7 @@ async def cancel(request: DTOUserRetrieve, db: Session=Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
     
 @user.get("/", status_code=200)
-async def get(db: Session=Depends(get_db)):
+async def get(db: Session=Depends(get_db), current_user: dict = Depends(ServiceUser.get_current_user)):
     try:
         _result = ServiceUser.get(db, 0, 100)
         return ResponseError(code=200, status="Ok", message="Finded all", validationErrors=_result).dict(exclude_none=True)

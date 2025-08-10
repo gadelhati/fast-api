@@ -85,18 +85,18 @@ class ServiceUser(ServiceBase[User, DTOUserCreate, DTOUserUpdate, DTOUserRetriev
         encoded_jwt = jwt.encode(to_encode, JWT_REFRESH_SECRET_KEY, ALGORITHM)
         return encoded_jwt
 
-    def authenticate_user(self, username_or_email: str, password: str) -> Optional[DTOUserRetrieve]:
+    def authenticate_user(self, username: str, password: str) -> Optional[DTOUserRetrieve]:
         """
         Authenticates user and manages security controls.
         Method for using the authentication system - DO NOT expose in the API.
         """
         try:
             user = self.db.query(User).filter(
-                User.username == username_or_email,
+                User.username == username,
                 User.deleted_at.is_(None)
             ).first()
             if not user:
-                logger.warning(f"Incorrect username or password: {username_or_email}")
+                logger.warning(f"Incorrect username or password: {username}")
                 return None
             if self._is_account_locked(user):
                 logger.warning(f"Login attempt to blocked account: {user.username}")
